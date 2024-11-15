@@ -1,0 +1,14 @@
+__pycache__/
+__pycache__/*
+__pycache__/**/*
+ip_check.egg-info/
+ip_check.egg-info/*
+ip_check.egg-info/**/*
+build/
+dist/
+result_*
+ip-check*
+*.ini
+*.txt
+.last_commit
+.python-version
