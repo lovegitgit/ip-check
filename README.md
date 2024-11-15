@@ -6,9 +6,10 @@
 
 ```shell
 pip install -U ip-check
-# ip-check 程序配置文件
+# 按需修改ip-check 程序配置文件
 ip-check-cfg
-# igeo-cfg GEO 数据库配置文件
+# 按需修改igeo-cfg GEO 数据库配置文件
+igeo-cfg
 # 下载mmdb 数据库
 igeo-dl
 ```
@@ -84,7 +85,7 @@ optional arguments:
 # 文本参数，文本中内容支持ip、ip cidr、支持ipv6、支持ip:port 表达式
 ip-check test.txt
 
-# ip 参数，支持ip、ip cidr、支持ipv6
+# ip 参数，支持ip、ip cidr、支持ipv6、支持ip:port 表达式
 ip-check 192.168.1.1/32
 ip-check fe80::/ 10
 ip-check 1.1.1.1:443
