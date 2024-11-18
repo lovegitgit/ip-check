@@ -224,6 +224,8 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
+- V1.9.1
+  - 默认参数修改
 - V1.9.0
   - ip-filter 支持输出到窗口
 - V1.8.9
