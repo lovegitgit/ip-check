@@ -224,6 +224,8 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
+- V1.9.2
+  - 通过CF-RAY 判断是否是CF CDN
 - V1.9.1
   - 默认参数修改
 - V1.9.0
