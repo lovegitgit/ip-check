@@ -73,7 +73,7 @@ class ValidTest:
                                                timeout=self.config.timeout,
                                                preload_content=False,
                                                redirect=True)
-            if self.config.get_loc:
+            if r.headers.get('CF-RAY', None):
                 req_dict = {}
                 for line in r.readlines():
                     line = line.decode('utf-8')

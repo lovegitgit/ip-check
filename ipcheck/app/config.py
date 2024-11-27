@@ -74,8 +74,8 @@ class Config(CommonConfig):
         self.vt_timeout = 3.5
         # 可用性测试检测的key
         self.vt_check_key = 'h'
-        # 是否检测地区信息
-        self.vt_get_loc = True
+        # # 是否检测地区信息, draft
+        # self.vt_get_loc = True
 
         # 延时rtt test 测试选项
         self.rt_enabled = True

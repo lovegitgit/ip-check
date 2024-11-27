@@ -38,8 +38,8 @@ retry_factor = 0.3
 timeout = 3.5
 # 可用性测试检测的key
 check_key = h
-# 是否获取IP 机场码信息, 当前仅支持cf ip, 如果测试其他cdn 需要关闭
-get_loc = True
+# 是否获取IP 机场码信息, 当前仅支持cf ip, 如果测试其他cdn 需要关闭, 此选项已废弃
+# get_loc = True
 
 # rtt 测试配置
 [rtt test]
