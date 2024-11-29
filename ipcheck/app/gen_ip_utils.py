@@ -25,10 +25,6 @@ def gen_ip_list_by_arg(sources) -> List[IpInfo]:
     config = Config()
     if config.skip_all_filters:
         return ip_list
-    # if config.white_list:
-    #     ip_list = filter_ip_list_by_white_list(ip_list, config.white_list)
-    # if config.block_list:
-    #     ip_list = filter_ip_list_by_block_list(ip_list, config.block_list)
     if config.prefer_orgs:
         ip_list = filter_ip_list_by_orgs(ip_list, config.prefer_orgs)
     if config.block_orgs:

@@ -7,7 +7,6 @@ import inspect
 from os import path
 import socket
 import ipaddress
-from types import BuiltinFunctionType
 from typing import List
 from ipcheck.app.config import Config
 from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address
