@@ -72,6 +72,8 @@ optional arguments:
   -v, --verbose         显示调试信息
   -ns, --no_save        是否忽略保存测速结果文件
   --dry_run             是否跳过所有测试
+  -4, --only_v4         仅测试ipv4
+  -6, --only_v6         仅测试ipv6
   --version             show program's version number and exit
 ```
 
@@ -224,6 +226,8 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
+- V1.9.4
+  - 新增仅测试ipv4/ipv6 选项开关
 - V1.9.3
   - 仅读取CF CDN 的机场码
 - V1.9.2
