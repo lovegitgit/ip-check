@@ -228,6 +228,8 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
+- V1.9.7
+  - 修复无法运行异常
 - V1.9.6
   - 重构了ip 解析器
 - V1.9.5
