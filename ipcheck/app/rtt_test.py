@@ -16,12 +16,12 @@ class RttTest:
     def __init__(self, ip_list: List[IpInfo], config: RttTestConfig) -> None:
         self.ip_list = ip_list
         self.config = config
-        StateMachine.clear()
 
     def run(self) -> List[IpInfo]:
         if not self.config.enabled:
             print('跳过RTT测试')
             return self.ip_list
+        StateMachine.clear()
         print('准备测试rtt ... ...')
         print('rtt ping 间隔为: {}秒'.format(self.config.interval))
         if len(self.ip_list) > self.config.ip_limit_count:

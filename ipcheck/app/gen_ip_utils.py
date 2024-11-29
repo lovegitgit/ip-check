@@ -12,6 +12,7 @@ from ipcheck.app.ipparser.ip_parser import IpParser
 from ipcheck.app.ipparser.ip_port_parser import IpPortParser
 from ipcheck.app.ipparser.hostname_parser import HostnameParser
 from ipcheck.app.geo_utils import get_geo_info
+from ipcheck.app.utils import get_ip_version
 import random
 
 # 生成ip 列表
@@ -21,9 +22,14 @@ def gen_ip_list(shuffle=True):
     for source in config.ip_source:
         ip_list.extend(gen_ip_list_by_arg(source))
     ip_list = list(dict.fromkeys(ip_list))
+    final_list = []
+    if config.only_v4:
+        final_list.extend([ip_info for ip_info in ip_list if get_ip_version(ip_info.ip) == 4])
+    if config.only_v6:
+        final_list.extend([ip_info for ip_info in ip_list if get_ip_version(ip_info.ip) == 6])
     if shuffle:
-        random.shuffle(ip_list)
-    return ip_list
+        random.shuffle(final_list)
+    return final_list
 
 
 def gen_ip_list_by_arg(source) -> List[IpInfo]:

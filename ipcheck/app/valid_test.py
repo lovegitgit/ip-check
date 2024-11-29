@@ -19,16 +19,16 @@ class ValidTest:
     def __init__(self, ip_list: List[IpInfo], config: ValidTestConfig) -> None:
         self.ip_list = ip_list
         self.config = config
-        StateMachine.clear()
 
     def run(self) -> List[IpInfo]:
+        if not self.config.enabled:
+            print('跳过可用性测试')
+            return self.ip_list
+        StateMachine.clear()
         print('准备测试可用性 ... ...')
         if len(self.ip_list) > self.config.ip_limit_count:
             print('待测试ip 过多, 当前最大限制数量为{} 个, 压缩中... ...'.format(self.config.ip_limit_count))
             self.ip_list = adjust_list_by_size(self.ip_list, self.config.ip_limit_count)
-        if not self.config.enabled:
-            print('跳过可用性测试')
-            return self.ip_list
         print('可用性域名为: {}'.format(self.config.host_name))
         print('是否使用user-agent: {}'.format(self.config.user_agent))
         total_count = len(self.ip_list)

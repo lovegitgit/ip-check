@@ -52,6 +52,8 @@ class Config(CommonConfig):
         self.prefer_orgs = None
         self.block_orgs = None
         self.dry_run = False
+        self.only_v4 = False
+        self.only_v6 = False
 
         # 可用性valid test测试选项
         # 是否测试可用性

@@ -20,12 +20,12 @@ class SpeedTest:
     def __init__(self, ip_list: List[IpInfo], config: SpeedTestConfig) -> None:
         self.ip_list = ip_list
         self.config = config
-        StateMachine.clear()
 
     def run(self) -> List[IpInfo]:
         if not self.config.enabled:
             print('跳过速度测试')
             return self.ip_list
+        StateMachine.clear()
         print('准备测试下载速度 ... ...')
         print('是否使用user-agent: {}'.format(self.config.user_agent))
         if len(self.ip_list) > self.config.ip_limit_count:
