@@ -62,52 +62,104 @@ class IpParser:
     # parse ip:port,eg 1.2.3.4:443
     @staticmethod
     def parse_ip_port(arg: str):
-        ip_list = []
-        config = Config()
-        fixed_arg = arg
-        if arg.startswith('[') and arg.endswith(']'):
-            fixed_arg = arg[1: -1]
-        ip_str = port_str = None
-        if is_ip_address(fixed_arg):
-            ip_str = fixed_arg
-            port_str = config.ip_port
-        elif is_ip_network(arg):
-            ip_str = arg
-            port_str = config.ip_port
-        elif ':' in arg:
-            index = arg.rindex(':')
-            ip_str = arg[:index]
-            if ip_str.startswith('[') and ip_str.endswith(']'):
-                ip_str = ip_str[1: -1]
-            port_str = arg[index + 1:]
-        if is_ip_network(ip_str):
-            port = int(port_str) if is_valid_port(port_str) else config.ip_port
-            # config.skip_all_filters 仅仅被igeo-info 设置
-            # 针对igeo-info 读取纯cidr 我们只返回第一个ip
-            if not is_ip_address(ip_str) and config.skip_all_filters:
-                sub_index = ip_str.rindex('/')
-                first_ip = ip_str[: sub_index]
-                ip_list = [IpInfo(first_ip, port)]
+        def is_allow_in_wb_list(ip_str: str):
+            if config.white_list:
+                for line in config.white_list:
+                    if arg.startswith(line):
+                        return True
+            if config.block_list:
+                blocked = False
+                for line in config.block_list:
+                    if arg.startswith(line):
+                        blocked = True
+                        break
+                return not blocked
+            return True
+
+        def is_allow_in_v4_v6(ip_str: str):
+            if config.only_v4 ^ config.only_v6:
+                if config.only_v4:
+                    return get_net_version(ip_str) == 4
+                elif config.only_v6:
+                    return get_net_version(ip_str) == 6
             else:
-                net = ipaddress.ip_network(ip_str, strict=False)
-                hosts = list(net.hosts())
-                if ((config.only_v4 and config.only_v6) or
-                    (config.only_v4 and get_net_version(ip_str) == 4) or
-                    (config.only_v6 and get_net_version(ip_str) == 6)):
-                    ip_list = [IpInfo(str(ip), port) for ip in hosts]
+                return True
+
+        def is_port_allowed(port_str: int):
+            try:
+                port = int(port_str)
+            except:
+                return False
+            if config.prefer_ports:
+                return port in config.prefer_ports
+            return True
+
+        def parse_ip():
+            lst =[]
+            if is_ip_address(arg) and is_allow_in_wb_list(arg) and is_allow_in_v4_v6(arg):
+                lst = [IpInfo(arg, config.ip_port)]
+            return lst
+
+        def parse_cidr():
+            lst = []
+            if is_ip_network(arg) and is_allow_in_wb_list(arg) and is_allow_in_v4_v6(arg):
+                # 针对igeo-info 仅返回一个ip
+                if config.skip_all_filters:
+                    lst = [IpInfo(arg.split('/')[0], config.ip_port)]
+                else:
+                    net = ipaddress.ip_network(arg, strict=False)
+                    hosts = list(net.hosts())
+                    lst = [IpInfo(str(ip), config.ip_port) for ip in hosts if is_allow_in_wb_list(str(ip))]
+            return lst
+
+
+        def parse_ip_port():
+            lst = []
+            parts = arg.split(':')
+            if len(parts) == 2:
+                ip_part = parts[0]
+                port_part = parts[1]
+                if is_port_allowed(port_part) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part) and is_allow_in_v4_v6(ip_part):
+                    lst = [IpInfo(ip_part, int(port_part))]
+            return lst
+
+        ip_list = []
+        arg = arg.replace('[', '').replace(']', '')
+        config = Config()
+        for fn in parse_ip, parse_cidr, parse_ip_port:
+            parse_list = fn()
+            if parse_list:
+                ip_list.extend(parse_list)
+                break
         return ip_list
 
     # parse hostname, eg: example.com
     @staticmethod
     def parse_host_name(arg: str):
-        ip_list = []
+        def is_allow_in_wb_list(ip_str: str):
+            if config.white_list:
+                for line in config.white_list:
+                    if arg.startswith(line):
+                        return True
+            if config.block_list:
+                blocked = False
+                for line in config.block_list:
+                    if arg.startswith(line):
+                        blocked = True
+                        break
+                return not blocked
+            return True
+
+        config = Config()
+        resolve_ips = []
         if is_hostname(arg):
-            config = Config()
-            if (config.only_v4 and config.only_v6):
-                ip_list.extend(IpInfo(ip, config.ip_port, hostname=arg) for ip in get_resolve_ips(arg, config.ip_port, socket.AF_INET))
-                ip_list.extend(IpInfo(ip, config.ip_port, hostname=arg) for ip in get_resolve_ips(arg, config.ip_port, socket.AF_INET6))
-            elif config.only_v4:
-                ip_list.extend(IpInfo(ip, config.ip_port, hostname=arg) for ip in get_resolve_ips(arg, config.ip_port, socket.AF_INET))
-            elif config.only_v6:
-                ip_list.extend(IpInfo(ip, config.ip_port, hostname=arg) for ip in get_resolve_ips(arg, config.ip_port, socket.AF_INET6))
+            if config.only_v4 ^ config.only_v6:
+                if config.only_v4:
+                    resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET))
+                elif config.only_v6:
+                    resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET6))
+            else:
+                resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET))
+                resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET6))
+        ip_list = [IpInfo(ip, config.ip_port) for ip in resolve_ips if is_allow_in_wb_list(ip)]
         return ip_list

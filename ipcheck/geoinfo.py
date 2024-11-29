@@ -16,7 +16,6 @@ def get_info():
     config = Config()
     config.skip_all_filters = True
     config.ip_source = args.sources
-    config.only_v4 = config.only_v6 = True
     ip_list = gen_ip_list(False)
     if ip_list:
         for ip_info in ip_list:
@@ -64,12 +63,8 @@ def filter_ips():
     if block_orgs:
         print('屏蔽org 参数为:', block_orgs)
         config.block_orgs = block_orgs
-    if args.only_v4:
-        config.only_v4 = args.only_v4
-    if args.only_v6:
-        config.only_v6 = args.only_v6
-    if not config.only_v4 and not config.only_v6:
-        config.only_v6 = config.only_v4 = True
+    config.only_v4 = args.only_v4
+    config.only_v6 = args.only_v6
     ip_list = gen_ip_list(False)
     if ip_list:
         ips = [ip_info.ip for ip_info in ip_list]
