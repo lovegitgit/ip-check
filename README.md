@@ -217,6 +217,8 @@ optional arguments:
                         偏好org 选择, 格式为: expr1 expr2, 如org1 org2 会筛选org1, org2 的服务商ip
   -bo BLOCK_ORGS [BLOCK_ORGS ...], --block_orgs BLOCK_ORGS [BLOCK_ORGS ...]
                         屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip
+  -4, --only_v4         仅筛选ipv4
+  -6, --only_v6         仅筛选ipv6
   -o OUTPUT, --output OUTPUT
                         输出文件
 ```
@@ -226,6 +228,8 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
+- V1.9.6
+  - 重构了ip 解析器
 - V1.9.5
   - 修复和优化仅测试ipv4/ipv6 选项开关
 - V1.9.4
