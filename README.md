@@ -228,6 +228,6 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
-- V2.0.0
+- V2.0.1
   - 修复一些bug
 
