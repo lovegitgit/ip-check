@@ -95,8 +95,11 @@ class IpParser:
 
         def parse_ip():
             lst =[]
-            if is_ip_address(arg) and is_allow_in_wb_list(arg) and is_allow_in_v4_v6(arg):
-                lst = [IpInfo(arg, config.ip_port)]
+            ip_str = arg
+            if ip_str.startswith('[') and ip_str.endswith(']'):
+                ip_str = arg[1: -1]
+            if is_ip_address(ip_str) and is_allow_in_wb_list(ip_str) and is_allow_in_v4_v6(ip_str):
+                lst = [IpInfo(ip_str, config.ip_port)]
             return lst
 
         def parse_cidr():
@@ -117,13 +120,14 @@ class IpParser:
             if ':' in arg:
                 index = arg.rindex(':')
                 ip_part = arg[:index]
+                if ip_part.startswith('[') and ip_part.endswith(']'):
+                    ip_part = ip_part[1: -1]
                 port_part = arg[index + 1:]
                 if is_port_allowed(port_part) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part) and is_allow_in_v4_v6(ip_part):
                     lst = [IpInfo(ip_part, int(port_part))]
             return lst
 
         ip_list = []
-        arg = arg.replace('[', '').replace(']', '')
         config = Config()
         for fn in parse_ip, parse_cidr, parse_ip_port:
             parse_list = fn()
