@@ -115,10 +115,10 @@ class IpParser:
 
         def parse_ip_port():
             lst = []
-            parts = arg.split(':')
-            if len(parts) == 2:
-                ip_part = parts[0]
-                port_part = parts[1]
+            if ':' in arg:
+                index = arg.rindex(':')
+                ip_part = arg[index]
+                port_part = arg[index + 1:]
                 if is_port_allowed(port_part) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part) and is_allow_in_v4_v6(ip_part):
                     lst = [IpInfo(ip_part, int(port_part))]
             return lst
