@@ -228,6 +228,6 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
-- V1.9.8
-  - 修复重构ip 解析器引入的bug
+- V2.0.0
+  - 修复一些bug
 
