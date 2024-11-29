@@ -91,6 +91,8 @@ class IpParser:
                 port = int(port_str)
             except:
                 return False
+            if not is_valid_port(port):
+                return False
             if config.prefer_ports:
                 return port in config.prefer_ports
             return True
@@ -118,7 +120,7 @@ class IpParser:
             lst = []
             if ':' in arg:
                 index = arg.rindex(':')
-                ip_part = arg[index]
+                ip_part = arg[:index]
                 port_part = arg[index + 1:]
                 if is_port_allowed(port_part) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part) and is_allow_in_v4_v6(ip_part):
                     lst = [IpInfo(ip_part, int(port_part))]
