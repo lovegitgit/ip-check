@@ -86,15 +86,12 @@ class IpParser:
                 return True
 
         def is_port_allowed(port_str: int):
-            try:
-                port = int(port_str)
-            except:
+            if not is_valid_port(port_str):
                 return False
-            if not is_valid_port(port):
-                return False
-            if config.prefer_ports:
-                return port in config.prefer_ports
-            return True
+            if not config.prefer_ports:
+                return True
+            port = int(port_str)
+            return port in config.prefer_ports
 
         def parse_ip():
             lst =[]
