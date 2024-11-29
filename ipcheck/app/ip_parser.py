@@ -64,13 +64,13 @@ class IpParser:
         def is_allow_in_wb_list(ip_str: str):
             if config.white_list:
                 for line in config.white_list:
-                    if arg.startswith(line):
+                    if ip_str.startswith(line):
                         return True
                 return False
             if config.block_list:
                 blocked = False
                 for line in config.block_list:
-                    if arg.startswith(line):
+                    if ip_str.startswith(line):
                         blocked = True
                         break
                 return not blocked
