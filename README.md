@@ -226,6 +226,8 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
+- V1.9.5
+  - 修复和优化仅测试ipv4/ipv6 选项开关
 - V1.9.4
   - 新增仅测试ipv4/ipv6 选项开关
 - V1.9.3
