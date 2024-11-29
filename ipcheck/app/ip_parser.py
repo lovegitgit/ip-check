@@ -67,6 +67,7 @@ class IpParser:
                 for line in config.white_list:
                     if arg.startswith(line):
                         return True
+                return False
             if config.block_list:
                 blocked = False
                 for line in config.block_list:
