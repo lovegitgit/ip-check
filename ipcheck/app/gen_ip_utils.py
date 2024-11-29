@@ -6,7 +6,6 @@ from typing import List
 from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.ip_parser import IpParser
-from ipcheck.app.ipparser.hostname_parser import HostnameParser
 from ipcheck.app.geo_utils import get_geo_info
 import random
 
