@@ -5,7 +5,7 @@ from typing import List
 from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.ipparser.base_parser import BaseParser
-from ipcheck.app.utils import is_valid_port, is_ip_address
+from ipcheck.app.utils import is_valid_port, is_ip_address, get_ip_version
 
 class IpPortParser(BaseParser):
     '''
@@ -39,10 +39,18 @@ class IpPortParser(BaseParser):
 
     # IpPortParser use only
     def extra_check(self) -> bool:
-        res = False
-        prefer_ports = Config().prefer_ports
+        config = Config()
+        ip_valid = False
+        if config.only_v4 == config.only_v6:
+            ip_valid = True
+        elif config.only_v4:
+            ip_valid = get_ip_version(self.ip) == 4
+        elif config.only_v6:
+            ip_valid = get_ip_version(self.ip) == 6
+        port_valid = False
+        prefer_ports = config.prefer_ports
         if prefer_ports:
-            res = self.port in prefer_ports
+            port_valid = self.port in prefer_ports
         else:
-            res = True
-        return res
+            port_valid = True
+        return ip_valid and port_valid

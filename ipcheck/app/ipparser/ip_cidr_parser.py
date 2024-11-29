@@ -5,7 +5,7 @@ from typing import List
 from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.ipparser.base_parser import BaseParser
-from ipcheck.app.utils import is_ip_network
+from ipcheck.app.utils import is_ip_network, get_net_version
 import ipaddress
 
 class IpCidrParser(BaseParser):
@@ -25,3 +25,12 @@ class IpCidrParser(BaseParser):
             hosts = list(net.hosts())
             ip_list = [IpInfo(str(ip), self.port) for ip in hosts]
         return ip_list
+
+    def extra_check(self) -> bool:
+        config = Config()
+        if config.only_v4 == config.only_v6:
+            return True
+        elif config.only_v4:
+            return get_net_version(self.source) == 4
+        elif config.only_v6:
+            return get_net_version(self.source) == 6

@@ -34,6 +34,10 @@ def get_ip_version(ip_str: str):
     ip = ipaddress.ip_address(ip_str)
     return ip.version
 
+def get_net_version(net_str: str):
+    net = ipaddress.ip_network(net_str, strict=False)
+    return net.version
+
 def is_hostname(name):
     pattern = r"(?i)^([a-z0-9-]+|([a-z0-9_-]+[.])+[a-z]+)$"
     return re.match(pattern, name) is not None
