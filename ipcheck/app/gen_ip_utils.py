@@ -5,35 +5,23 @@
 from typing import List
 from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
-from ipcheck.app.ipparser.ip_dir_parser import IpDirParser
-from ipcheck.app.ipparser.ip_file_parser import IpFileParser
-from ipcheck.app.ipparser.ip_cidr_parser import IpCidrParser
-from ipcheck.app.ipparser.ip_parser import IpParser
-from ipcheck.app.ipparser.ip_port_parser import IpPortParser
+from ipcheck.app.ip_parser import IpParser
 from ipcheck.app.ipparser.hostname_parser import HostnameParser
 from ipcheck.app.geo_utils import get_geo_info
-from ipcheck.app.utils import get_ip_version
 import random
 
 # 生成ip 列表
 def gen_ip_list(shuffle=True):
     config = Config()
-    ip_list = []
-    for source in config.ip_source:
-        ip_list.extend(gen_ip_list_by_arg(source))
+    ip_list = gen_ip_list_by_arg(config.ip_source)
     ip_list = list(dict.fromkeys(ip_list))
     if shuffle:
         random.shuffle(ip_list)
     return ip_list
 
-def gen_ip_list_by_arg(source) -> List[IpInfo]:
-    ip_list = []
-    parsers = [IpDirParser(source), IpFileParser(source), IpParser(source), IpCidrParser(source), IpPortParser(source), HostnameParser(source)]
-    for parser in parsers:
-        if parser.is_valid:
-            ips = parser.parse()
-            ip_list.extend(ips)
-            break
+def gen_ip_list_by_arg(sources) -> List[IpInfo]:
+    ip_parser = IpParser(sources)
+    ip_list = ip_parser.parse()
     ip_list = get_geo_info(ip_list)
     config = Config()
     if config.skip_all_filters:

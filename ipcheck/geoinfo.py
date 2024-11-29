@@ -16,6 +16,7 @@ def get_info():
     config = Config()
     config.skip_all_filters = True
     config.ip_source = args.sources
+    config.only_v4 = config.only_v6 = True
     ip_list = gen_ip_list(False)
     if ip_list:
         for ip_info in ip_list:
@@ -32,6 +33,8 @@ def filter_ips():
     parser.add_argument("-pl", "--prefer_locs", type=str, nargs='+', default=None, help='偏好国家地区选择, 格式为: expr1 expr2, 如hongkong japan 会筛选HongKong 和Japan 地区的ip')
     parser.add_argument("-po", "--prefer_orgs", type=str, nargs='+', default=None, help='偏好org 选择, 格式为: expr1 expr2, 如org1 org2 会筛选org1, org2 的服务商ip')
     parser.add_argument("-bo", "--block_orgs", type=str, nargs='+', default=None, help='屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip')
+    parser.add_argument("-4", "--only_v4", action="store_true", default=False, help="仅筛选ipv4")
+    parser.add_argument("-6", "--only_v6", action="store_true", default=False, help="仅筛选ipv6")
     parser.add_argument("-o", "--output", type=str, default=None, help="输出文件")
     args = parser.parse_args()
     config = Config()
@@ -61,6 +64,12 @@ def filter_ips():
     if block_orgs:
         print('屏蔽org 参数为:', block_orgs)
         config.block_orgs = block_orgs
+    if args.only_v4:
+        config.only_v4 = args.only_v4
+    if args.only_v6:
+        config.only_v6 = args.only_v6
+    if not config.only_v4 and not config.only_v6:
+        config.only_v6 = config.only_v4 = True
     ip_list = gen_ip_list(False)
     if ip_list:
         ips = [ip_info.ip for ip_info in ip_list]

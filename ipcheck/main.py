@@ -181,8 +181,12 @@ def load_config():
         config.st_bt_ip_limit = lb
     if loss > 0:
         config.rt_max_loss = loss
-    config.only_v4 = args.only_v4
-    config.only_v6 = args.only_v6
+    if args.only_v4:
+        config.only_v4 = args.only_v4
+    if args.only_v6:
+        config.only_v6 = args.only_v6
+    if not config.only_v4 and not config.only_v6:
+        config.only_v6 = config.only_v4 = True
     return config
 
 
