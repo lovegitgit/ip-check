@@ -105,6 +105,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
                     break
             return not blocked
         return True
+
     def is_allow_in_v4_v6(ip_str: str):
         if config.only_v4 ^ config.only_v6:
             if config.only_v4:
@@ -113,6 +114,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
                 return get_net_version(ip_str) == 6
         else:
             return True
+
     def is_port_allowed(port_str: int):
         if not is_valid_port(port_str):
             return False
@@ -120,6 +122,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             return True
         port = int(port_str)
         return port in config.prefer_ports
+
     def parse_ip():
         lst =[]
         ip_str = arg
@@ -128,6 +131,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
         if is_ip_address(ip_str) and is_allow_in_wb_list(ip_str) and is_allow_in_v4_v6(ip_str):
             lst = [IpInfo(ip_str, config.ip_port)]
         return lst
+
     def parse_cidr():
         lst = []
         if is_ip_network(arg) and is_allow_in_wb_list(arg) and is_allow_in_v4_v6(arg):
@@ -139,6 +143,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
                 hosts = list(net.hosts())
                 lst = [IpInfo(str(ip), config.ip_port) for ip in hosts if is_allow_in_wb_list(str(ip))]
         return lst
+
     def parse_ip_port():
         lst = []
         if ':' in arg:
@@ -150,6 +155,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             if is_port_allowed(port_part) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part) and is_allow_in_v4_v6(ip_part):
                 lst = [IpInfo(ip_part, int(port_part))]
         return lst
+
     ip_list = []
     for fn in parse_ip, parse_cidr, parse_ip_port:
         parse_list = fn()
@@ -174,6 +180,7 @@ def parse_ip_by_host_name(arg: str, config: Config):
                     break
             return not blocked
         return True
+
     resolve_ips = []
     if is_hostname(arg):
         if config.only_v4 ^ config.only_v6:
