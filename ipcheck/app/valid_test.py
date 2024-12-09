@@ -73,7 +73,7 @@ class ValidTest:
                                                timeout=self.config.timeout,
                                                preload_content=False,
                                                redirect=True)
-            if '/cdn-cgi/trace' == self.config.path and r.headers.get('CF-RAY', None):
+            if '/cdn-cgi/trace' == self.config.path or not r.headers.get('CF-RAY', None):
                 req_dict = {}
                 for line in r.readlines():
                     line = line.decode('utf-8')
