@@ -228,6 +228,6 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
-- V2.0.3
-  - 代码重构
+- V2.0.4
+  - 修复CF CDN 测试不准确的问题
 
