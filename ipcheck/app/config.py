@@ -54,6 +54,8 @@ class Config(CommonConfig):
         self.dry_run = False
         self.only_v4 = False
         self.only_v6 = False
+        # cidr ip 数量限制
+        self.cidr_sample_ip_num = 16
 
         # 可用性valid test测试选项
         # 是否测试可用性

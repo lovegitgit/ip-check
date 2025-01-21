@@ -4,6 +4,7 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from os import path
+import random
 import socket
 import ipaddress
 from typing import List
@@ -140,8 +141,14 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
                 lst = [IpInfo(arg.split('/')[0], config.ip_port)]
             else:
                 net = ipaddress.ip_network(arg, strict=False)
-                hosts = list(net.hosts())
-                lst = [IpInfo(str(ip), config.ip_port) for ip in hosts if is_allow_in_wb_list(str(ip))]
+                # 避免cidr 过大导致的运行时间过久
+                num_hosts = net.num_addresses - 2
+                sample_size = min(config.cidr_sample_ip_num, num_hosts)
+                random_hosts = set()
+                while len(random_hosts) < sample_size:
+                    random_ip = ipaddress.ip_address(net.network_address + 1 + random.randint(0, num_hosts - 1))
+                    random_hosts.add(random_ip)
+                lst = [IpInfo(str(ip), config.ip_port) for ip in random_hosts if is_allow_in_wb_list(str(ip))]
         return lst
 
     def parse_ip_port():
