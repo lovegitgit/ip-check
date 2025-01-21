@@ -142,7 +142,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             else:
                 net = ipaddress.ip_network(arg, strict=False)
                 # 避免cidr 过大导致的运行时间过久
-                num_hosts = net.num_addresses - 2
+                num_hosts = net.num_addresses
                 sample_size = min(config.cidr_sample_ip_num, num_hosts)
                 random_hosts = set()
                 while len(random_hosts) < sample_size:
