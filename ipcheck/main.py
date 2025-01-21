@@ -64,7 +64,7 @@ def load_config():
     parser.add_argument("--dry_run", action="store_true", default=False, help="是否跳过所有测试")
     parser.add_argument("-4", "--only_v4", action="store_true", default=False, help="仅测试ipv4")
     parser.add_argument("-6", "--only_v6", action="store_true", default=False, help="仅测试ipv6")
-    parser.add_argument("-cr", "--cr_size", type=int, default=16, help="cidr 随机ip 数量限制")
+    parser.add_argument("-cs", "--cr_size", type=int, default=16, help="cidr 随机ip 数量限制")
     parser.add_argument(
         "--version",
         action="version",
