@@ -74,7 +74,7 @@ optional arguments:
   --dry_run             是否跳过所有测试
   -4, --only_v4         仅测试ipv4
   -6, --only_v6         仅测试ipv6
-  -cr CR_SIZE, --cr_size CR_SIZE
+  -cs CR_SIZE, --cr_size CR_SIZE
                         cidr 随机ip 数量限制
   --version             show program's version number and exit
 ```
@@ -230,6 +230,6 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
-- V2.0.7
-  - 修复CIDR /32 /31 无法生成IP 的bug
+- V2.0.8
+  - 参数修改: cr -> cs
 
