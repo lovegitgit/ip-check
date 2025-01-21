@@ -230,6 +230,6 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
-- V2.0.6
-  - 针对CIDR 生成IP 数量进行限制以提升运行效率
+- V2.0.7
+  - 修复CIDR /32 /31 无法生成IP 的bug
 
