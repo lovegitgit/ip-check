@@ -15,6 +15,8 @@ IP_CHECK_DEFAULT_CONFIG = '''# 通用配置
 ip_port = 443
 # 是否存储结果到文件
 no_save = False
+# cidr 抽样个数
+cidr_sample_ip_num = 16
 
 # 可用性检查配置
 [valid test]

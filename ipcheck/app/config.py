@@ -39,6 +39,8 @@ class Config(CommonConfig):
         # common 部分配置
         self.ip_port = 443
         self.no_save = False
+        # cidr ip 数量限制
+        self.cidr_sample_ip_num = 16
         # 以下仅仅在运行时支持修改, 不支持文件配置
         # 测试ip 源, 可选ip、ip cidr、文本(读取ip、ip cidr)、zip 压缩包(遍历其中的txt 文本, 读取ip、ip cidr)
         self.ip_source = None
@@ -54,8 +56,6 @@ class Config(CommonConfig):
         self.dry_run = False
         self.only_v4 = False
         self.only_v6 = False
-        # cidr ip 数量限制
-        self.cidr_sample_ip_num = 16
 
         # 可用性valid test测试选项
         # 是否测试可用性
