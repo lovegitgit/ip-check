@@ -230,6 +230,6 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
-- V2.0.8
-  - 参数修改: cr -> cs
+- V2.0.9
+  - 修复cidr 抽样获取ip 不对的问题
 
