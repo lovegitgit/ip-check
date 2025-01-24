@@ -146,7 +146,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
                 sample_size = min(config.cidr_sample_ip_num, num_hosts)
                 random_hosts = set()
                 while len(random_hosts) < sample_size:
-                    random_ip = ipaddress.ip_address(net.network_address + 1 + random.randint(0, num_hosts - 1))
+                    random_ip = ipaddress.ip_address(net.network_address + random.randint(0, num_hosts - 1))
                     random_hosts.add(random_ip)
                 lst = [IpInfo(str(ip), config.ip_port) for ip in random_hosts if is_allow_in_wb_list(str(ip))]
         return lst
