@@ -15,7 +15,7 @@ from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
 from typing import List
-from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file
+from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url
 
 
 # 注册全局退出监听
@@ -59,6 +59,7 @@ def load_config():
     parser.add_argument("-r", "--rtt", type=int, default=0, help="期望的最大rtt (ms)")
     parser.add_argument("-l", "--loss", type=int, default=0, help="期望的最大丢包率")
     parser.add_argument("-c", "--config", type=str, default=None, help="配置文件")
+    parser.add_argument("-u", "--url", type=str, default=None, help="测速地址")
     parser.add_argument("-v", "--verbose", action="store_true", default=False, help="显示调试信息")
     parser.add_argument("-ns", "--no_save", action="store_true", default=False, help="是否忽略保存测速结果文件")
     parser.add_argument("--dry_run", action="store_true", default=False, help="是否跳过所有测试")
@@ -187,6 +188,12 @@ def load_config():
     if args.cr_size > 0:
         config.cidr_sample_ip_num = args.cr_size
     print('cidr 抽样ip 个数为:', config.cidr_sample_ip_num)
+    if args.url:
+        host_name, path = parse_url(args.url)
+        config.vt_host_name = host_name
+        config.vt_path = path
+        config.st_host_name = host_name
+        config.st_file_path = path
     return config
 
 

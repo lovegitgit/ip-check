@@ -7,6 +7,7 @@ import os
 import random
 from datetime import datetime
 import sys
+from urllib.parse import urlparse
 import requests
 from tqdm import tqdm
 import re
@@ -21,6 +22,9 @@ def is_ip_address(ip_str: str):
     except ValueError:
         return False
 
+def parse_url(url: str):
+    parsed_url = urlparse(url)
+    return parsed_url.hostname, parsed_url.path
 
 def is_ip_network(net_str: str):
     try:
