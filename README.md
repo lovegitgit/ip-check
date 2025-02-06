@@ -69,6 +69,7 @@ optional arguments:
   -l LOSS, --loss LOSS  期望的最大丢包率
   -c CONFIG, --config CONFIG
                         配置文件
+  -u URL, --url URL     测速地址
   -v, --verbose         显示调试信息
   -ns, --no_save        是否忽略保存测速结果文件
   --dry_run             是否跳过所有测试
@@ -230,6 +231,6 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
-- V2.1.0
-  - cidr 随机抽样ip 个数可预配置
+- V2.1.1
+  - 增加-u 参数一键配置测速地址
 
