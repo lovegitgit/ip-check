@@ -139,9 +139,8 @@ class SpeedTest:
                 if check_now - check_start > 1:
                     break
 
-        t1 = threading.Thread(target=download)
+        t1 = threading.Thread(target=download, daemon=True)
         t2 = threading.Thread(target=cal_speed)
-        t1.setDaemon(True)
         t1.start()
         t2.start()
         # t1.join()
