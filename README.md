@@ -231,6 +231,6 @@ optional arguments:
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ## Release Note
-- V2.1.2
-  - cidr 解析优化
+- V2.1.3
+  - 更加精准的速度计算
 
