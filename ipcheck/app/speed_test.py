@@ -132,12 +132,6 @@ class SpeedTest:
                 if end - real_start > self.config.download_time:
                     stop_signal = True
                     break
-            check_start = time.time()
-            while not download_exit:
-                time.sleep(0.1)
-                check_now = time.time()
-                if check_now - check_start > 1:
-                    break
 
         t1 = threading.Thread(target=download, daemon=True)
         t2 = threading.Thread(target=cal_speed)
