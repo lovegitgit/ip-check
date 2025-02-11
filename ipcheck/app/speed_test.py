@@ -66,6 +66,7 @@ class SpeedTest:
         stop_signal = False
         max_speed = 0
         avg_speed = 0
+        real_start = 0
 
         def download():
             nonlocal download_exit
@@ -88,8 +89,10 @@ class SpeedTest:
                                  timeout=self.config.timeout,
                                  preload_content=False,
                                  retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor))
-                nonlocal size
+                nonlocal size, real_start
                 for chunk in r.stream():
+                    if real_start == 0:
+                        real_start = time.time()
                     size += len(chunk)
                     if stop_signal:
                         break
@@ -99,9 +102,8 @@ class SpeedTest:
             download_exit = True
 
         def cal_speed():
-            nonlocal size, stop_signal, max_speed, avg_speed
+            nonlocal size, stop_signal, max_speed, avg_speed, real_start
             original_start = time.time()
-            real_start = original_start
             start = original_start
             old_size = size
             while not download_exit:
@@ -110,7 +112,6 @@ class SpeedTest:
                 if end - start > 0.9:
                     cur_size = size
                     if cur_size == 0:
-                        real_start = end
                         if end - original_start > self.config.download_time * 0.5:
                             stop_signal = True
                             break
@@ -123,6 +124,8 @@ class SpeedTest:
                         max_speed = speed_now
                     start = end
                     old_size = cur_size
+                if real_start == 0:
+                    continue
                 # 快速测速逻辑
                 if self.config.fast_check:
                     if end - real_start > self.config.download_time * 0.5:
