@@ -2,6 +2,10 @@
 
 高效的cdn 测速工具，用于ip 优选。
 
+## Home Page
+
+[Github](https://github.com/lovegitgit/ip-check)
+
 ## 安装与部署
 
 ```shell
@@ -229,8 +233,3 @@ optional arguments:
 ## License
 
 [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.html)
-
-## Release Note
-- V2.1.3
-  - 更加精准的速度计算
-
