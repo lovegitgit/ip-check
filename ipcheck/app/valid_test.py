@@ -66,28 +66,27 @@ class ValidTest:
         if self.config.user_agent:
             headers.update({'User-Agent': random.choice(USER_AGENTS)})
         try:
-            r: urllib3.response = pool.urlopen('GET', self.config.path,
+            with pool.urlopen('GET', self.config.path,
                                                retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor),
                                                headers=headers,
                                                assert_same_host=False,
                                                timeout=self.config.timeout,
                                                preload_content=False,
-                                               redirect=True)
-            if '/cdn-cgi/trace' == self.config.path:
-                req_dict = {}
-                for line in r.readlines():
-                    line = line.decode('utf-8')
-                    kv = line.strip().split('=')
-                    req_dict.update({kv[0]: kv[1]})
-                if req_dict.get(check_key, None) == self.config.host_name:
-                    loc = req_dict.get('loc', None)
-                    colo = req_dict.get('colo', None)
-                    ip_info.loc = loc
-                    ip_info.colo = colo
+                                               redirect=True) as r:
+                if '/cdn-cgi/trace' == self.config.path:
+                    req_dict = {}
+                    for line in r.readlines():
+                        line = line.decode('utf-8')
+                        kv = line.strip().split('=')
+                        req_dict.update({kv[0]: kv[1]})
+                    if req_dict.get(check_key, None) == self.config.host_name:
+                        loc = req_dict.get('loc', None)
+                        colo = req_dict.get('colo', None)
+                        ip_info.loc = loc
+                        ip_info.colo = colo
+                        res = ip_info
+                elif r.status == 200:
                     res = ip_info
-            elif r.status == 200:
-                res = ip_info
-            r.release_conn()
         except:
             pass
         return res

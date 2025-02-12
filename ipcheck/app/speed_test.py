@@ -82,21 +82,20 @@ class SpeedTest:
             if self.config.user_agent:
                 headers.update({'User-Agent': random.choice(USER_AGENTS)})
             try:
-                r = pool.urlopen('GET', self.config.file_path,
+                with pool.urlopen('GET', self.config.file_path,
                                  redirect=True,
                                  headers=headers,
                                  assert_same_host=False,
                                  timeout=self.config.timeout,
                                  preload_content=False,
-                                 retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor))
-                nonlocal size, real_start
-                for chunk in r.stream():
-                    if real_start == 0:
-                        real_start = time.time()
-                    size += len(chunk)
-                    if stop_signal:
-                        break
-                r.release_conn()
+                                 retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor)) as r:
+                    nonlocal size, real_start
+                    for chunk in r.stream():
+                        if real_start == 0:
+                            real_start = time.time()
+                        size += len(chunk)
+                        if stop_signal:
+                            break
             except:
                 pass
             download_exit = True

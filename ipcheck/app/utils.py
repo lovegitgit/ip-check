@@ -104,22 +104,21 @@ def download_file(url, path, proxy):
     session = requests.Session()
     session.mount('https://', adapter=requests.adapters.HTTPAdapter(max_retries=5))
     try:
-        response = session.get(url, stream=True, timeout=10, proxies=proxies)
-        total_size = int(response.headers.get('content-length', 0))  # 获取文件总大小
-
-        # 使用 tqdm 来显示进度条
-        with open(path, 'wb') as file, tqdm(
-            desc=path,
-            total=total_size,
-            unit='K',
-            unit_scale=True,
-            unit_divisor=1024,
-        ) as bar:
-            for data in response.iter_content(chunk_size=1024):
-                # 写入文件并更新进度条
-                file.write(data)
-                bar.update(len(data))
-            return True
+        with session.get(url, stream=True, timeout=10, proxies=proxies) as response:
+            total_size = int(response.headers.get('content-length', 0))  # 获取文件总大小
+            # 使用 tqdm 来显示进度条
+            with open(path, 'wb') as file, tqdm(
+                desc=path,
+                total=total_size,
+                unit='K',
+                unit_scale=True,
+                unit_divisor=1024,
+            ) as bar:
+                for data in response.iter_content(chunk_size=1024):
+                    # 写入文件并更新进度条
+                    file.write(data)
+                    bar.update(len(data))
+                return True
     except Exception:
         return False
 
