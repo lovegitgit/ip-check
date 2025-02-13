@@ -207,7 +207,7 @@ usage: ip-filter [-h] [-w WHITE_LIST [WHITE_LIST ...]] [-b BLOCK_LIST [BLOCK_LIS
                  [-po PREFER_ORGS [PREFER_ORGS ...]] [-bo BLOCK_ORGS [BLOCK_ORGS ...]] -o OUTPUT
                  sources [sources ...]
 
-ifilter: ip 筛选工具
+ip-filter: ip 筛选工具
 
 positional arguments:
   sources               待筛选的ip(s)
@@ -226,6 +226,8 @@ optional arguments:
                         屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip
   -4, --only_v4         仅筛选ipv4
   -6, --only_v6         仅筛选ipv6
+  -cs CR_SIZE, --cr_size CR_SIZE
+                        cidr 随机抽样ip 数量限制
   -o OUTPUT, --output OUTPUT
                         输出文件
 ```

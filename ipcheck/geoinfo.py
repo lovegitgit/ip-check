@@ -25,7 +25,7 @@ def get_info():
 
 
 def filter_ips():
-    parser = argparse.ArgumentParser(description='ifilter: ip 筛选工具')
+    parser = argparse.ArgumentParser(description='ip-filter: ip 筛选工具')
     parser.add_argument("sources", nargs="+", help="待筛选的ip(s)")
     parser.add_argument("-w", "--white_list", type=str, nargs='+', default=None, help='偏好ip参数, 格式为: expr1 expr2, 如8 9 会筛选8和9开头的ip')
     parser.add_argument("-b", "--block_list", type=str, nargs='+', default=None, help='屏蔽ip参数, 格式为: expr1 expr2, 如8 9 会过滤8和9开头的ip')
