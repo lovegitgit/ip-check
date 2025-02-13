@@ -34,6 +34,7 @@ def filter_ips():
     parser.add_argument("-bo", "--block_orgs", type=str, nargs='+', default=None, help='屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip')
     parser.add_argument("-4", "--only_v4", action="store_true", default=False, help="仅筛选ipv4")
     parser.add_argument("-6", "--only_v6", action="store_true", default=False, help="仅筛选ipv6")
+    parser.add_argument("-cs", "--cr_size", type=int, default=0, help="cidr 随机抽样ip 数量限制")
     parser.add_argument("-o", "--output", type=str, default=None, help="输出文件")
     args = parser.parse_args()
     config = Config()
@@ -65,6 +66,9 @@ def filter_ips():
         config.block_orgs = block_orgs
     config.only_v4 = args.only_v4
     config.only_v6 = args.only_v6
+    if args.cr_size > 0:
+        config.cidr_sample_ip_num = args.cr_size
+    print('cidr 抽样ip 个数为:', config.cidr_sample_ip_num)
     ip_list = gen_ip_list(False)
     if ip_list:
         ips = [ip_info.ip for ip_info in ip_list]
