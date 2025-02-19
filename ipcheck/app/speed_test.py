@@ -114,6 +114,7 @@ class SpeedTest:
                         if end - original_start > self.config.download_time * 0.5:
                             stop_signal = True
                             break
+                        start = end
                         continue
                     speed_now = int((cur_size - old_size) / ((end - start) * 1024))
                     avg_speed = int(cur_size / ((end - real_start) * 1024))
