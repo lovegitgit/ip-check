@@ -43,7 +43,7 @@ def get_net_version(net_str: str):
     return net.version
 
 def is_hostname(name):
-    pattern = r"(?i)^([a-z0-9-]+|([a-z0-9_-]+[.])+[a-z]+)$"
+    pattern = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z]{2,})+$"
     return re.match(pattern, name) is not None
 
 def get_resolve_ips(hostname, port, family):

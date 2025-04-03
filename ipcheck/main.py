@@ -15,7 +15,7 @@ from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
 from typing import List
-from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url
+from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url, is_hostname
 
 
 # 注册全局退出监听
@@ -194,6 +194,10 @@ def load_config():
         config.vt_path = path
         config.st_host_name = host_name
         config.st_file_path = path
+    if not is_hostname(config.vt_host_name):
+        raise ValueError('可用性测试域名不合法, 请检查参数!')
+    if not is_hostname(config.st_host_name):
+        raise ValueError('测速域名不合法, 请检查参数!')
     return config
 
 
