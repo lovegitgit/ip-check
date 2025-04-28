@@ -82,43 +82,43 @@ def load_config():
     print('当前配置文件为:', config_path)
     Config.CONFIG_PATH = config_path
     config = Config()
-    config.verbose = args.verbose
-    print('是否开启调试信息:', config.verbose)
-    config.ip_source = args.source
-    print('测试源文件为:', config.ip_source)
+    config.ro_verbose = args.verbose
+    print('是否开启调试信息:', config.ro_verbose)
+    config.ro_ip_source = args.source
+    print('测试源文件为:', config.ro_ip_source)
     block_list, white_list = args.block_list, args.white_list
     if block_list and white_list:
         print('偏好参数与黑名单参数同时存在, 自动忽略黑名单参数!')
         block_list = None
     if white_list:
         print('白名单参数为:', white_list)
-        config.white_list = white_list
+        config.ro_white_list = white_list
     if block_list:
         print('黑名单参数为:', block_list)
-        config.block_list = block_list
-    config.prefer_locs = args.prefer_locs
-    if config.prefer_locs:
-        print('优选地区参数为:', config.prefer_locs)
+        config.ro_block_list = block_list
+    config.ro_prefer_locs = args.prefer_locs
+    if config.ro_prefer_locs:
+        print('优选地区参数为:', config.ro_prefer_locs)
     prefer_orgs, block_orgs = args.prefer_orgs, args.block_orgs
     if prefer_orgs and block_orgs:
         print('偏好org参数与屏蔽org参数同时存在, 自动忽略屏蔽org参数!')
         block_orgs = None
-    config.prefer_orgs = args.prefer_orgs
+    config.ro_prefer_orgs = args.prefer_orgs
     if prefer_orgs:
         print('优选org 参数为:', prefer_orgs)
-        config.prefer_orgs = prefer_orgs
+        config.ro_prefer_orgs = prefer_orgs
     if block_orgs:
         print('屏蔽org 参数为:', block_orgs)
-        config.block_orgs = block_orgs
+        config.ro_block_orgs = block_orgs
     if args.prefer_ports:
-        config.prefer_ports = [ port for port in args.prefer_ports if 0 < port < 65535 ]
-    if config.prefer_ports:
-        print('ip:port 测试源端口为:', config.prefer_ports)
+        config.ro_prefer_ports = [ port for port in args.prefer_ports if 0 < port < 65535 ]
+    if config.ro_prefer_ports:
+        print('ip:port 测试源端口为:', config.ro_prefer_ports)
     config.vt_enabled = False if args.disable_vt else True
     config.rt_enabled = False if args.disable_rt else True
     config.st_enabled = False if args.disable_st else True
-    config.dry_run = args.dry_run
-    if config.dry_run:
+    config.ro_dry_run = args.dry_run
+    if config.ro_dry_run:
         print('跳过所有测试!!!')
         config.vt_enabled = False
         config.rt_enabled = False
@@ -153,7 +153,7 @@ def load_config():
         print('快速测速已开启')
 
     if args.output:
-        config.out_file = args.output
+        config.ro_out_file = args.output
     else:
         fixed_file = args.source[0]
         if not is_ip_address(fixed_file) and is_ip_network(fixed_file):
@@ -167,8 +167,8 @@ def load_config():
         dst_name = dst_name.replace(':', '-')
         if not dst_name:
             dst_name = dir_name
-        config.out_file = os.path.join(dir_name, 'result_{}_{}.txt'.format(dst_name, config.ip_port))
-    print('优选ip 文件为:', config.out_file)
+        config.ro_out_file = os.path.join(dir_name, 'result_{}_{}.txt'.format(dst_name, config.ip_port))
+    print('优选ip 文件为:', config.ro_out_file)
     config.no_save = args.dry_run if args.dry_run else args.no_save
     print('是否忽略保存测速结果到文件:', config.no_save)
     # 处理限制参数
@@ -183,8 +183,8 @@ def load_config():
         config.st_bt_ip_limit = lb
     if loss > 0:
         config.rt_max_loss = loss
-    config.only_v4 = args.only_v4
-    config.only_v6 = args.only_v6
+    config.ro_only_v4 = args.only_v4
+    config.ro_only_v6 = args.only_v6
     if args.cr_size > 0:
         config.cidr_sample_ip_num = args.cr_size
     print('cidr 抽样ip 个数为:', config.cidr_sample_ip_num)
@@ -229,7 +229,7 @@ def main():
         print('从参数中生成了{} 个待测试ip'.format(ip_list_size))
     # 可用性测试
     valid_test_config = config.get_valid_test_config()
-    if config.verbose:
+    if config.ro_verbose:
         print('\n可用性测试配置为:')
         print(valid_test_config)
     valid_test = ValidTest(ip_list, valid_test_config)
@@ -238,7 +238,7 @@ def main():
     # rtt 测试
     if passed_ips:
         rtt_test_config = config.get_rtt_test_config()
-        if config.verbose:
+        if config.ro_verbose:
             print('\nrtt 测试配置为:')
             print(rtt_test_config)
         rtt_test = RttTest(passed_ips, rtt_test_config)
@@ -252,7 +252,7 @@ def main():
     # 测速
     if passed_ips:
         speed_test_config = config.get_speed_test_config()
-        if config.verbose:
+        if config.ro_verbose:
             print('\n速度测试配置为:')
             print(speed_test_config)
         speed_test = SpeedTest(passed_ips, speed_test_config)
@@ -266,7 +266,7 @@ def main():
         passed_ips = sorted(passed_ips, key=lambda x: x.max_speed, reverse=True)
         print_better_ips(passed_ips)
         if not config.no_save:
-            write_better_ips_to_file(passed_ips, config.out_file)
+            write_better_ips_to_file(passed_ips, config.ro_out_file)
     else:
         print('下载测试没有获取到可用ip, 测试停止!')
         return

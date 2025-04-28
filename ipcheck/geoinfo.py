@@ -14,8 +14,8 @@ def get_info():
     parser.add_argument("sources", nargs="+", help="待获取归属地信息的ip(s)")
     args = parser.parse_args()
     config = Config()
-    config.skip_all_filters = True
-    config.ip_source = args.sources
+    config.ro_skip_all_filters = True
+    config.ro_ip_source = args.sources
     ip_list = gen_ip_list(False)
     if ip_list:
         for ip_info in ip_list:
@@ -38,7 +38,7 @@ def filter_ips():
     parser.add_argument("-o", "--output", type=str, default=None, help="输出文件")
     args = parser.parse_args()
     config = Config()
-    config.ip_source = args.sources
+    config.ro_ip_source = args.sources
     out_file = args.output
     block_list, white_list = args.block_list, args.white_list
     if block_list and white_list:
@@ -46,26 +46,26 @@ def filter_ips():
         block_list = None
     if white_list:
         print('白名单参数为:', white_list)
-        config.white_list = white_list
+        config.ro_white_list = white_list
     if block_list:
         print('黑名单参数为:', block_list)
-        config.block_list = block_list
-    config.prefer_locs = args.prefer_locs
-    if config.prefer_locs:
-        print('优选地区参数为:', config.prefer_locs)
+        config.ro_block_list = block_list
+    config.ro_prefer_locs = args.prefer_locs
+    if config.ro_prefer_locs:
+        print('优选地区参数为:', config.ro_prefer_locs)
     prefer_orgs, block_orgs = args.prefer_orgs, args.block_orgs
     if prefer_orgs and block_orgs:
         print('偏好org参数与屏蔽org参数同时存在, 自动忽略屏蔽org参数!')
         block_orgs = None
-    config.prefer_orgs = args.prefer_orgs
+    config.ro_prefer_orgs = args.prefer_orgs
     if prefer_orgs:
         print('优选org 参数为:', prefer_orgs)
-        config.prefer_orgs = prefer_orgs
+        config.ro_prefer_orgs = prefer_orgs
     if block_orgs:
         print('屏蔽org 参数为:', block_orgs)
-        config.block_orgs = block_orgs
-    config.only_v4 = args.only_v4
-    config.only_v6 = args.only_v6
+        config.ro_block_orgs = block_orgs
+    config.ro_only_v4 = args.only_v4
+    config.ro_only_v6 = args.only_v6
     if args.cr_size > 0:
         config.cidr_sample_ip_num = args.cr_size
     print('cidr 抽样ip 个数为:', config.cidr_sample_ip_num)

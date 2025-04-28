@@ -41,21 +41,22 @@ class Config(CommonConfig):
         self.no_save = False
         # cidr ip 数量限制
         self.cidr_sample_ip_num = 16
+        # ro: runtime-only settings
         # 以下仅仅在运行时支持修改, 不支持文件配置
         # 测试ip 源, 可选ip、ip cidr、文本(读取ip、ip cidr)、zip 压缩包(遍历其中的txt 文本, 读取ip、ip cidr)
-        self.ip_source = None
-        self.out_file = None
-        self.verbose = None
-        self.skip_all_filters = False
-        self.white_list = None
-        self.block_list = None
-        self.prefer_locs = None
-        self.prefer_ports = None
-        self.prefer_orgs = None
-        self.block_orgs = None
-        self.dry_run = False
-        self.only_v4 = False
-        self.only_v6 = False
+        self.ro_ip_source = None
+        self.ro_out_file = None
+        self.ro_verbose = None
+        self.ro_skip_all_filters = False
+        self.ro_white_list = None
+        self.ro_block_list = None
+        self.ro_prefer_locs = None
+        self.ro_prefer_ports = None
+        self.ro_prefer_orgs = None
+        self.ro_block_orgs = None
+        self.ro_dry_run = False
+        self.ro_only_v4 = False
+        self.ro_only_v6 = False
 
         # 可用性valid test测试选项
         # 是否测试可用性
@@ -160,8 +161,8 @@ class Config(CommonConfig):
 
     def check_key_valid(self, key):
         variables = vars(self)
-        for k, v in variables.items():
-            if v is None:
+        for k, _ in variables.items():
+            if k.startswith('ro'):
                 continue
             if k == key:
                 return True

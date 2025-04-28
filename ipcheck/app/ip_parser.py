@@ -79,19 +79,19 @@ class IpParser:
                         ip_list.extend(result)
         ip_list = list(dict.fromkeys(ip_list))
         ip_list = get_geo_info(ip_list)
-        if self.config.skip_all_filters:
+        if self.config.ro_skip_all_filters:
             return ip_list
-        if self.config.prefer_orgs:
-            ip_list = filter_ip_list_by_orgs(ip_list, self.config.prefer_orgs)
-        if self.config.block_orgs:
-            ip_list = filter_ip_list_by_block_orgs(ip_list, self.config.block_orgs)
-        if self.config.prefer_locs:
-            ip_list = filter_ip_list_by_locs(ip_list, self.config.prefer_locs)
+        if self.config.ro_prefer_orgs:
+            ip_list = filter_ip_list_by_orgs(ip_list, self.config.ro_prefer_orgs)
+        if self.config.ro_block_orgs:
+            ip_list = filter_ip_list_by_block_orgs(ip_list, self.config.ro_block_orgs)
+        if self.config.ro_prefer_locs:
+            ip_list = filter_ip_list_by_locs(ip_list, self.config.ro_prefer_locs)
         return ip_list
 
     def __parse_sources(self):
         args = []
-        for arg in self.config.ip_source:
+        for arg in self.config.ro_ip_source:
             if path.exists(path.join(arg)) and path.isfile(path.join(arg)):
                 with open(path.join(arg), 'r', encoding='utf-8') as f:
                     for line in f.readlines():
@@ -104,14 +104,14 @@ class IpParser:
 
 def parse_ip_by_ip_expr(arg: str, config: Config):
     def is_allow_in_wb_list(ip_str: str):
-        if config.white_list:
-            for line in config.white_list:
+        if config.ro_white_list:
+            for line in config.ro_white_list:
                 if ip_str.startswith(line):
                     return True
             return False
-        if config.block_list:
+        if config.ro_block_list:
             blocked = False
-            for line in config.block_list:
+            for line in config.ro_block_list:
                 if ip_str.startswith(line):
                     blocked = True
                     break
@@ -119,10 +119,10 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
         return True
 
     def is_allow_in_v4_v6(ip_str: str):
-        if config.only_v4 ^ config.only_v6:
-            if config.only_v4:
+        if config.ro_only_v4 ^ config.ro_only_v6:
+            if config.ro_only_v4:
                 return get_net_version(ip_str) == 4
-            elif config.only_v6:
+            elif config.ro_only_v6:
                 return get_net_version(ip_str) == 6
         else:
             return True
@@ -130,10 +130,10 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
     def is_port_allowed(port_str: int):
         if not is_valid_port(port_str):
             return False
-        if not config.prefer_ports:
+        if not config.ro_prefer_ports:
             return True
         port = int(port_str)
-        return port in config.prefer_ports
+        return port in config.ro_prefer_ports
 
     def parse_ip():
         lst =[]
@@ -150,7 +150,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             net = ipaddress.ip_network(arg, strict=False)
             num_hosts = net.num_addresses
             # 针对igeo-info 仅返回一个ip
-            if config.skip_all_filters:
+            if config.ro_skip_all_filters:
                 sample_size = 1
             # 避免cidr 过大导致的运行时间过久
             else:
@@ -185,14 +185,14 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
 # parse hostname, eg: example.com
 def parse_ip_by_host_name(arg: str, config: Config):
     def is_allow_in_wb_list(ip_str: str):
-        if config.white_list:
-            for line in config.white_list:
+        if config.ro_white_list:
+            for line in config.ro_white_list:
                 if ip_str.startswith(line):
                     return True
             return False
-        if config.block_list:
+        if config.ro_block_list:
             blocked = False
-            for line in config.block_list:
+            for line in config.ro_block_list:
                 if ip_str.startswith(line):
                     blocked = True
                     break
@@ -201,10 +201,10 @@ def parse_ip_by_host_name(arg: str, config: Config):
 
     resolve_ips = []
     if is_hostname(arg):
-        if config.only_v4 ^ config.only_v6:
-            if config.only_v4:
+        if config.ro_only_v4 ^ config.ro_only_v6:
+            if config.ro_only_v4:
                 resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET))
-            elif config.only_v6:
+            elif config.ro_only_v6:
                 resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET6))
         else:
             resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET))
