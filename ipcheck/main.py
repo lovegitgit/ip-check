@@ -114,9 +114,9 @@ def load_config():
         config.ro_prefer_ports = [ port for port in args.prefer_ports if 0 < port < 65535 ]
     if config.ro_prefer_ports:
         print('ip:port 测试源端口为:', config.ro_prefer_ports)
-    config.vt_enabled = False if args.disable_vt else True
-    config.rt_enabled = False if args.disable_rt else True
-    config.st_enabled = False if args.disable_st else True
+    config.vt_enabled = not args.disable_vt
+    config.rt_enabled = not args.disable_rt
+    config.st_enabled = not args.disable_st
     config.ro_dry_run = args.dry_run
     if config.ro_dry_run:
         print('跳过所有测试!!!')
