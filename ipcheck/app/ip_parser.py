@@ -8,13 +8,18 @@ import random
 import socket
 import ipaddress
 from typing import List
+from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME
 from ipcheck.app.config import Config
 from ipcheck.app.geo_utils import get_geo_info
+from ipcheck.app.statemachine import StateMachine
 from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address
 from ipcheck.app.ip_info import IpInfo
 
 
 def filter_ip_list_by_locs(ip_list: List[IpInfo], prefer_locs: List[str]):
+    if not StateMachine().geo_loc_avaiable:
+        print('{} 数据库不可用, 跳过地区过滤... ...'.format(GEO2CITY_DB_NAME))
+        return ip_list
     fixed_list = []
     for ip_info in ip_list:
         for loc in prefer_locs:
@@ -24,6 +29,9 @@ def filter_ip_list_by_locs(ip_list: List[IpInfo], prefer_locs: List[str]):
     return fixed_list
 
 def filter_ip_list_by_orgs(ip_list: List[IpInfo], prefer_orgs: List[str]):
+    if not StateMachine().geo_asn_org_avaiable:
+        print('{} 数据库不可用, 跳过org 过滤... ...'.format(GEO2ASN_DB_NAME))
+        return ip_list
     fixed_list = []
     for ip_info in ip_list:
         for org in prefer_orgs:
@@ -33,6 +41,9 @@ def filter_ip_list_by_orgs(ip_list: List[IpInfo], prefer_orgs: List[str]):
     return fixed_list
 
 def filter_ip_list_by_block_orgs(ip_list: List[IpInfo], block_orgs: List[str]):
+    if not StateMachine().geo_asn_org_avaiable:
+        print('{} 数据库不可用, 跳过org过滤... ...'.format(GEO2ASN_DB_NAME))
+        return ip_list
     fixed_list = []
     for ip_info in ip_list:
         is_valid = True

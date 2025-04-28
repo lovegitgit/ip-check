@@ -4,11 +4,15 @@
 from ipcheck.app.utils import singleton
 from ipcheck.app.ip_info import IpInfo
 
+# 工具类，存储一些运行时全局数据
+
 @singleton
 class StateMachine:
 
     def __init__(self) -> None:
         self.ip_list = []
+        self.geo_loc_avaiable = False
+        self.geo_asn_org_avaiable = False
 
     @classmethod
     def clear(cls):
