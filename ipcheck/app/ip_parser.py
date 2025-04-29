@@ -102,39 +102,37 @@ class IpParser:
                 args.append(arg)
         return args
 
-def parse_ip_by_ip_expr(arg: str, config: Config):
-    def is_allow_in_wb_list(ip_str: str):
-        if config.ro_white_list:
-            for line in config.ro_white_list:
-                if ip_str.startswith(line):
-                    return True
-            return False
-        if config.ro_block_list:
-            blocked = False
-            for line in config.ro_block_list:
-                if ip_str.startswith(line):
-                    blocked = True
-                    break
-            return not blocked
+def is_allow_in_wb_list(ip_str: str, config=Config()):
+    if config.ro_white_list:
+        for line in config.ro_white_list:
+            if ip_str.startswith(line):
+                return True
+        return False
+    if config.ro_block_list:
+        blocked = False
+        for line in config.ro_block_list:
+            if ip_str.startswith(line):
+                blocked = True
+                break
+        return not blocked
+    return True
+def is_allow_in_v4_v6(ip_str: str, config=Config()):
+    if config.ro_only_v4 ^ config.ro_only_v6:
+        if config.ro_only_v4:
+            return get_net_version(ip_str) == 4
+        elif config.ro_only_v6:
+            return get_net_version(ip_str) == 6
+    else:
         return True
+def is_port_allowed(port_str: int, config=Config()):
+    if not is_valid_port(port_str):
+        return False
+    if not config.ro_prefer_ports:
+        return True
+    port = int(port_str)
+    return port in config.ro_prefer_ports
 
-    def is_allow_in_v4_v6(ip_str: str):
-        if config.ro_only_v4 ^ config.ro_only_v6:
-            if config.ro_only_v4:
-                return get_net_version(ip_str) == 4
-            elif config.ro_only_v6:
-                return get_net_version(ip_str) == 6
-        else:
-            return True
-
-    def is_port_allowed(port_str: int):
-        if not is_valid_port(port_str):
-            return False
-        if not config.ro_prefer_ports:
-            return True
-        port = int(port_str)
-        return port in config.ro_prefer_ports
-
+def parse_ip_by_ip_expr(arg: str, config: Config):
     def parse_ip():
         lst =[]
         ip_str = arg
@@ -146,7 +144,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
 
     def parse_cidr():
         lst = []
-        if is_ip_network(arg) and is_allow_in_wb_list(arg) and is_allow_in_v4_v6(arg):
+        if is_ip_network(arg) and is_allow_in_v4_v6(arg):
             net = ipaddress.ip_network(arg, strict=False)
             num_hosts = net.num_addresses
             # 针对igeo-info 仅返回一个ip
@@ -184,21 +182,6 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
 
 # parse hostname, eg: example.com
 def parse_ip_by_host_name(arg: str, config: Config):
-    def is_allow_in_wb_list(ip_str: str):
-        if config.ro_white_list:
-            for line in config.ro_white_list:
-                if ip_str.startswith(line):
-                    return True
-            return False
-        if config.ro_block_list:
-            blocked = False
-            for line in config.ro_block_list:
-                if ip_str.startswith(line):
-                    blocked = True
-                    break
-            return not blocked
-        return True
-
     resolve_ips = []
     if is_hostname(arg):
         if config.ro_only_v4 ^ config.ro_only_v6:
