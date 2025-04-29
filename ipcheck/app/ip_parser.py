@@ -8,7 +8,7 @@ import random
 import socket
 import ipaddress
 from typing import List
-from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME
+from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, WorkMode
 from ipcheck.app.config import Config
 from ipcheck.app.geo_utils import get_geo_info
 from ipcheck.app.statemachine import StateMachine
@@ -79,7 +79,7 @@ class IpParser:
                         ip_list.extend(result)
         ip_list = list(dict.fromkeys(ip_list))
         ip_list = get_geo_info(ip_list)
-        if self.config.ro_skip_all_filters:
+        if StateMachine().work_mode == WorkMode.IGEO_INFO:
             return ip_list
         if self.config.ro_prefer_orgs:
             ip_list = filter_ip_list_by_orgs(ip_list, self.config.ro_prefer_orgs)
@@ -148,7 +148,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             net = ipaddress.ip_network(arg, strict=False)
             num_hosts = net.num_addresses
             # 针对igeo-info 仅返回一个ip
-            if config.ro_skip_all_filters:
+            if StateMachine().work_mode == WorkMode.IGEO_INFO:
                 sample_size = 1
             # 避免cidr 过大导致的运行时间过久
             else:

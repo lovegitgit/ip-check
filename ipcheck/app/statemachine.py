@@ -3,6 +3,7 @@
 
 from ipcheck.app.utils import singleton
 from ipcheck.app.ip_info import IpInfo
+from ipcheck import WorkMode
 
 # 工具类，存储一些运行时全局数据
 
@@ -13,6 +14,7 @@ class StateMachine:
         self.ip_list = []
         self.geo_loc_avaiable = False
         self.geo_asn_org_avaiable = False
+        self.work_mode = WorkMode.DEFAULT
 
     @classmethod
     def clear(cls):

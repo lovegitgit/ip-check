@@ -3,9 +3,10 @@
 
 import os
 import importlib_metadata
+from enum import Enum, auto
+
 
 metadata = importlib_metadata.metadata("ip-check")
-
 __version__ = metadata['version']
 
 # ip-check constants
@@ -116,5 +117,13 @@ db_asn_url = https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-ASN.mm
 # city 数据库下载地址
 db_city_url = https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb
 # 数据库更新检测API
-db_api_url = https://api.github.com/repos/P3TERX/GeoLite.mmdb/releases/latest
-'''
+db_api_url = https://api.github.com/repos/P3TERX/GeoLite.mmdb/releases/latest'''
+
+class WorkMode(Enum):
+    IP_CHECK = auto()
+    IP_CHECK_CFG = auto()
+    IGEO_INFO = auto()
+    IGEO_DL = auto()
+    IGEO_CFG = auto()
+    IP_FILTER = auto()
+    DEFAULT = IP_CHECK

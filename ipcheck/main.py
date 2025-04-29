@@ -5,7 +5,7 @@ import os
 import sys
 import subprocess
 import signal
-import ipcheck
+from ipcheck import WorkMode, __version__
 from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
 import argparse
@@ -69,7 +69,7 @@ def load_config():
     parser.add_argument(
         "--version",
         action="version",
-        version=f"%(prog)s version {ipcheck.__version__} installed in {os.path.dirname(__file__)}",
+        version=f"%(prog)s version {__version__} installed in {os.path.dirname(__file__)}",
     )
     args = parser.parse_args()
     config_path = args.config
@@ -219,6 +219,7 @@ def write_better_ips_to_file(ips: List[IpInfo], path):
 
 
 def main():
+    StateMachine().work_mode = WorkMode.IP_CHECK
     config = load_config()
     ip_list = gen_ip_list()
     ip_list_size = len(ip_list)
@@ -273,6 +274,7 @@ def main():
 
 
 def config_edit():
+    StateMachine().work_mode = WorkMode.IP_CHECK_CFG
     def_config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
     parser = argparse.ArgumentParser(description='ip-check 参数配置向导')
     parser.add_argument("-o", "--output", type=str, default=def_config_path, help="参数配置文件路径")

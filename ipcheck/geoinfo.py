@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, GEO2CITY_DB_PATH, GEO2ASN_DB_PATH, GEO_CONFIG_PATH, GEO_DEFAULT_CONFIG
+from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, GEO2CITY_DB_PATH, GEO2ASN_DB_PATH, GEO_CONFIG_PATH, GEO_DEFAULT_CONFIG, WorkMode
 from ipcheck.app.config import Config
 from ipcheck.app.gen_ip_utils import gen_ip_list
 from ipcheck.app.geo_utils import check_or_gen_def_config, download_geo_db, parse_geo_config, check_geo_version, save_version
@@ -9,12 +9,14 @@ import argparse
 import subprocess
 import sys
 
+from ipcheck.app.statemachine import StateMachine
+
 def get_info():
+    StateMachine().work_mode = WorkMode.IGEO_INFO
     parser = argparse.ArgumentParser(description='geo-info 获取ip(s) 的归属地信息')
     parser.add_argument("sources", nargs="+", help="待获取归属地信息的ip(s)")
     args = parser.parse_args()
     config = Config()
-    config.ro_skip_all_filters = True
     config.ro_ip_source = args.sources
     ip_list = gen_ip_list(False)
     if ip_list:
@@ -25,6 +27,7 @@ def get_info():
 
 
 def filter_ips():
+    StateMachine().work_mode = WorkMode.IP_FILTER
     parser = argparse.ArgumentParser(description='ip-filter: ip 筛选工具')
     parser.add_argument("sources", nargs="+", help="待筛选的ip(s)")
     parser.add_argument("-w", "--white_list", type=str, nargs='+', default=None, help='偏好ip参数, 格式为: expr1 expr2, 如8 9 会筛选8和9开头的ip')
@@ -87,6 +90,7 @@ def filter_ips():
 
 
 def download_db():
+    StateMachine().work_mode = WorkMode.IGEO_DL
     parser = argparse.ArgumentParser(description='igeo-dl 升级/下载geo 数据库')
     parser.add_argument("-u", "--url", type=str, default=None, help="geo 数据库下载地址, 要求结尾包含GeoLite2-City.mmdb 或GeoLite2-ASN.mmdb")
     parser.add_argument("-p", "--proxy", type=str, default=None, help="下载时使用的代理")
@@ -106,8 +110,8 @@ def download_db():
         print('请输入包含{} 或 {} 的url'.format(GEO2CITY_DB_NAME, GEO2ASN_DB_NAME))
 
 
-
 def config_edit():
+    StateMachine().work_mode = WorkMode.IGEO_CFG
     parser = argparse.ArgumentParser(description='geo-cfg 编辑geo config')
     parser.add_argument("-e", "--example", action="store_true", default=False, help="显示配置文件示例")
     args = parser.parse_args()

@@ -47,7 +47,6 @@ class Config(CommonConfig):
         self.ro_ip_source = None
         self.ro_out_file = None
         self.ro_verbose = None
-        self.ro_skip_all_filters = False
         self.ro_white_list = None
         self.ro_block_list = None
         self.ro_prefer_locs = None
