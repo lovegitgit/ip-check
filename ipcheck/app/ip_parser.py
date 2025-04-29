@@ -102,7 +102,7 @@ class IpParser:
                 args.append(arg)
         return args
 
-def is_allow_in_wb_list(ip_str: str, config=Config()):
+def is_allow_in_wb_list(ip_str: str, config: Config):
     if config.ro_white_list:
         for line in config.ro_white_list:
             if ip_str.startswith(line):
@@ -116,7 +116,8 @@ def is_allow_in_wb_list(ip_str: str, config=Config()):
                 break
         return not blocked
     return True
-def is_allow_in_v4_v6(ip_str: str, config=Config()):
+
+def is_allow_in_v4_v6(ip_str: str, config: Config):
     if config.ro_only_v4 ^ config.ro_only_v6:
         if config.ro_only_v4:
             return get_net_version(ip_str) == 4
@@ -124,7 +125,7 @@ def is_allow_in_v4_v6(ip_str: str, config=Config()):
             return get_net_version(ip_str) == 6
     else:
         return True
-def is_port_allowed(port_str: int, config=Config()):
+def is_port_allowed(port_str: int, config: Config):
     if not is_valid_port(port_str):
         return False
     if not config.ro_prefer_ports:
@@ -138,13 +139,13 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
         ip_str = arg
         if ip_str.startswith('[') and ip_str.endswith(']'):
             ip_str = arg[1: -1]
-        if is_ip_address(ip_str) and is_allow_in_wb_list(ip_str) and is_allow_in_v4_v6(ip_str):
+        if is_ip_address(ip_str) and is_allow_in_wb_list(ip_str, config) and is_allow_in_v4_v6(ip_str, config):
             lst = [IpInfo(ip_str, config.ip_port)]
         return lst
 
     def parse_cidr():
         lst = []
-        if is_ip_network(arg) and is_allow_in_v4_v6(arg):
+        if is_ip_network(arg) and is_allow_in_v4_v6(arg, config):
             net = ipaddress.ip_network(arg, strict=False)
             num_hosts = net.num_addresses
             # 针对igeo-info 仅返回一个ip
@@ -157,7 +158,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             while len(random_hosts) < sample_size:
                 random_ip = ipaddress.ip_address(net.network_address + random.randint(0, num_hosts - 1))
                 random_hosts.add(random_ip)
-            lst = [IpInfo(str(ip), config.ip_port) for ip in random_hosts if is_allow_in_wb_list(str(ip))]
+            lst = [IpInfo(str(ip), config.ip_port) for ip in random_hosts if is_allow_in_wb_list(str(ip), config)]
         return lst
 
     def parse_ip_port():
@@ -168,7 +169,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             if ip_part.startswith('[') and ip_part.endswith(']'):
                 ip_part = ip_part[1: -1]
             port_part = arg[index + 1:]
-            if is_port_allowed(port_part) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part) and is_allow_in_v4_v6(ip_part):
+            if is_port_allowed(port_part) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part, config) and is_allow_in_v4_v6(ip_part, config):
                 lst = [IpInfo(ip_part, int(port_part))]
         return lst
 
@@ -192,5 +193,5 @@ def parse_ip_by_host_name(arg: str, config: Config):
         else:
             resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET))
             resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET6))
-    ip_list = [IpInfo(ip, config.ip_port, hostname=arg) for ip in resolve_ips if is_allow_in_wb_list(ip)]
+    ip_list = [IpInfo(ip, config.ip_port, hostname=arg) for ip in resolve_ips if is_allow_in_wb_list(ip, config)]
     return ip_list
