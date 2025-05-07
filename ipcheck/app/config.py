@@ -22,6 +22,8 @@ SECTION_RTT_PREFIX = 'rt_'
 SECTION_DOWNLOAD = 'speed test'
 SECTION_DOWNLOAD_PREFIX = 'st_'
 
+RUNTIME_ONLY_PREFIX = 'ro_'
+
 SECTIONS = [SECTION_COMMON, SECTION_VALID, SECTION_RTT, SECTION_DOWNLOAD]
 PREFIX_SECTION_PAIRS = {
     SECTION_COMMON_PREFIX: SECTION_COMMON,
@@ -161,7 +163,7 @@ class Config(CommonConfig):
     def check_key_valid(self, key):
         variables = vars(self)
         for k, _ in variables.items():
-            if k.startswith('ro'):
+            if k.startswith(RUNTIME_ONLY_PREFIX):
                 continue
             if k == key:
                 return True
@@ -184,7 +186,7 @@ class Config(CommonConfig):
             parser[section] = {}
         variables = vars(self)
         for k, v in variables.items():
-            if v is None:
+            if k.startswith(RUNTIME_ONLY_PREFIX):
                 continue
             prefix = k[:3]
             section = PREFIX_SECTION_PAIRS.get(prefix, None)
