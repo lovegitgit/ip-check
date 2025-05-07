@@ -125,6 +125,7 @@ def is_allow_in_v4_v6(ip_str: str, config: Config):
             return get_net_version(ip_str) == 6
     else:
         return True
+
 def is_port_allowed(port_str: int, config: Config):
     if not is_valid_port(port_str):
         return False
@@ -169,7 +170,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             if ip_part.startswith('[') and ip_part.endswith(']'):
                 ip_part = ip_part[1: -1]
             port_part = arg[index + 1:]
-            if is_port_allowed(port_part) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part, config) and is_allow_in_v4_v6(ip_part, config):
+            if is_port_allowed(port_part, config) and is_ip_address(ip_part) and is_allow_in_wb_list(ip_part, config) and is_allow_in_v4_v6(ip_part, config):
                 lst = [IpInfo(ip_part, int(port_part))]
         return lst
 
