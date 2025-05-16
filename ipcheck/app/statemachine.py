@@ -15,6 +15,7 @@ class StateMachine:
         self.geo_loc_avaiable = False
         self.geo_asn_org_avaiable = False
         self.work_mode = WorkMode.DEFAULT
+        self.best_ips = []
 
     @classmethod
     def clear(cls):

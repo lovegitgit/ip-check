@@ -22,6 +22,9 @@ from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
     StateMachine.print_cache()
+    if StateMachine().best_ips:
+        print_better_ips(StateMachine().best_ips)
+        write_better_ips_to_file(StateMachine().best_ips, Config().ro_out_file)
     os._exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
