@@ -19,8 +19,6 @@ class StateMachine:
         self.geo_asn_org_avaiable = False
         # 工作模式
         self.work_mode = WorkMode.DEFAULT
-        # 优选ip
-        self.best_ips = []
         # ip-check 所在阶段
         self.ipcheck_stage = IpcheckStage.UNKNOWN
         # 用户插入时间

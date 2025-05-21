@@ -53,7 +53,6 @@ class SpeedTest:
             print(test_ip_info.get_info())
             if test_ip_info.max_speed > self.config.download_speed and test_ip_info.avg_speed > self.config.avg_download_speed:
                 passed_ips.append(test_ip_info)
-                StateMachine().best_ips.append(test_ip_info)
             if self.config.bt_ip_limit > 0 and len(passed_ips) >= self.config.bt_ip_limit:
                 break
         return passed_ips
