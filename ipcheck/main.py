@@ -15,7 +15,7 @@ from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
 from typing import List
-from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url, is_hostname, get_current_ts, show_freshable_content
+from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url, is_hostname, get_current_ts
 
 def print_cache():
     if StateMachine().user_inject:
