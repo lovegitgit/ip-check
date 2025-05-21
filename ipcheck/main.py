@@ -5,7 +5,7 @@ import os
 import sys
 import subprocess
 import signal
-from ipcheck import WorkMode, __version__
+from ipcheck import WorkMode, IpcheckStage, __version__
 from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
 import argparse
@@ -15,14 +15,27 @@ from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
 from typing import List
-from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url, is_hostname
+from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url, is_hostname, get_current_ts, show_freshable_content
 
+def print_cache():
+    if StateMachine().user_inject:
+        StateMachine.print_cache()
 
 # 注册全局退出监听
 def signal_handler(sig, frame):
-    print('You pressed Ctrl+C!')
-    StateMachine.print_cache()
-    os._exit(0)
+    state_machine = StateMachine()
+    cur_ts = get_current_ts()
+    ts_diff = cur_ts - state_machine.last_user_inject_ts
+    state_machine.last_user_inject_ts = cur_ts
+    if ts_diff < 3.3:
+        os._exit(0)
+    if state_machine.work_mode == WorkMode.IP_CHECK:
+        if state_machine.ipcheck_stage == IpcheckStage.UNKNOWN:
+            os._exit(0)
+        if not state_machine.user_inject:
+            if state_machine.ipcheck_stage > IpcheckStage.UNKNOWN and state_machine.ipcheck_stage < IpcheckStage.TEST_EXIT:
+                state_machine.ipcheck_stage += 1
+                state_machine.user_inject = True
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -235,6 +248,7 @@ def main():
         print(valid_test_config)
     valid_test = ValidTest(ip_list, valid_test_config)
     passed_ips = valid_test.run()
+    print_cache()
 
     # rtt 测试
     if passed_ips:
@@ -250,6 +264,7 @@ def main():
         print('可用性测试没有获取到可用ip, 测试停止!')
         return
 
+    print_cache()
     # 测速
     if passed_ips:
         speed_test_config = config.get_speed_test_config()
@@ -262,6 +277,7 @@ def main():
         print('rtt 测试没有获取到可用ip, 测试停止!')
         return
 
+    print_cache()
     # 对结果进行排序
     if passed_ips:
         passed_ips = sorted(passed_ips, key=lambda x: x.max_speed, reverse=True)

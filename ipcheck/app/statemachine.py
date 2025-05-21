@@ -4,6 +4,7 @@
 from ipcheck.app.utils import singleton
 from ipcheck.app.ip_info import IpInfo
 from ipcheck import WorkMode
+from ipcheck import IpcheckStage
 
 # 工具类，存储一些运行时全局数据
 
@@ -11,10 +12,21 @@ from ipcheck import WorkMode
 class StateMachine:
 
     def __init__(self) -> None:
+        # cache 的ip 列表
         self.ip_list = []
+        # geo tool 是否可用
         self.geo_loc_avaiable = False
         self.geo_asn_org_avaiable = False
+        # 工作模式
         self.work_mode = WorkMode.DEFAULT
+        # 优选ip
+        self.best_ips = []
+        # ip-check 所在阶段
+        self.ipcheck_stage = IpcheckStage.UNKNOWN
+        # 用户插入时间
+        self.user_inject = False
+        # 上次按ctrl C 的时间
+        self.last_user_inject_ts = 0
 
     @classmethod
     def clear(cls):

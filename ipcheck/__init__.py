@@ -91,7 +91,9 @@ avg_download_speed = 0
 # 是否执行快速测速开关
 fast_check = False
 # 获取到指定个优选ip 停止
-bt_ip_limit = 0'''
+bt_ip_limit = 0
+# 是否丢弃测速中途异常ip
+rm_err_ip = False'''
 
 
 USER_AGENTS = [
@@ -127,3 +129,10 @@ class WorkMode(Enum):
     IGEO_CFG = auto()
     IP_FILTER = auto()
     DEFAULT = IP_CHECK
+
+class IpcheckStage():
+    UNKNOWN = 0
+    VALID_TEST = 1
+    RTT_TEST = 2
+    SPEED_TEST = 3
+    TEST_EXIT = 4

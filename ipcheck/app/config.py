@@ -129,6 +129,8 @@ class Config(CommonConfig):
         self.st_fast_check = False
         # 获取到指定个优选ip 停止
         self.st_bt_ip_limit = 0
+        # 是否丢弃测速中途异常ip
+        self.st_rm_err_ip = False
 
         if self.CONFIG_PATH:
             self.__update(self.CONFIG_PATH)

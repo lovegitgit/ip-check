@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import List
+from ipcheck import IpcheckStage
 from ipcheck.app.rtt_test_config import RttTestConfig
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.statemachine import StateMachine
@@ -21,6 +22,8 @@ class RttTest:
         if not self.config.enabled:
             print('跳过RTT测试')
             return self.ip_list
+        StateMachine().ipcheck_stage = IpcheckStage.RTT_TEST
+        StateMachine().user_inject = False
         StateMachine.clear()
         print('准备测试rtt ... ...')
         print('rtt ping 间隔为: {}秒'.format(self.config.interval))
@@ -45,6 +48,8 @@ class RttTest:
         return passed_ips
 
     def __test(self, ip_info : IpInfo) -> IpInfo:
+        if StateMachine().ipcheck_stage != IpcheckStage.RTT_TEST:
+            return None
         return asyncio.run(self.host_specs(ip_info))
 
     async def host_specs(self, ip_info: IpInfo) -> IpInfo:

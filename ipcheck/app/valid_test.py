@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import List
+from ipcheck import IpcheckStage
 from ipcheck.app.statemachine import StateMachine
 from ipcheck.app.valid_test_config import ValidTestConfig
 from ipcheck.app.utils import adjust_list_by_size, show_freshable_content
@@ -24,6 +25,8 @@ class ValidTest:
         if not self.config.enabled:
             print('跳过可用性测试')
             return self.ip_list
+        StateMachine().ipcheck_stage = IpcheckStage.VALID_TEST
+        StateMachine().user_inject = False
         StateMachine.clear()
         print('准备测试可用性 ... ...')
         if len(self.ip_list) > self.config.ip_limit_count:
@@ -54,6 +57,8 @@ class ValidTest:
         return passed_ips
 
     def __test(self, ip_info) -> None:
+        if StateMachine().ipcheck_stage != IpcheckStage.VALID_TEST:
+            return None
         check_key = self.config.check_key
         pool = urllib3.HTTPSConnectionPool(
                 ip_info.ip, assert_hostname=self.config.host_name,

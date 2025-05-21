@@ -13,6 +13,7 @@ from tqdm import tqdm
 import re
 from tcppinglib.utils import async_hostname_lookup
 import asyncio
+import time
 
 
 def is_ip_address(ip_str: str):
@@ -86,7 +87,7 @@ def gen_time_desc():
 
 def show_freshable_content(content: str):
     print(content, end='\r')
-    sys.stdout.flush()
+    sys.__stdout__.flush()
 
 def write_file(content: str, path: str):
     with open(path, 'w', encoding='utf-8') as f:
@@ -140,6 +141,8 @@ def get_json_from_net(url: str, proxy=None):
         pass
     return res
 
+def get_current_ts() -> float:
+    return time.time()
 
 def singleton(cls):
     """
