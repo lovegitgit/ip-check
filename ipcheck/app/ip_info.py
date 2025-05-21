@@ -36,7 +36,7 @@ class IpInfo:
         return '    {}:{}{} {}_{} {} loss: {}% rtt: {} ms, 下载速度为(max/avg): {}/{} kB/s'.format(self.ip_str, self.port, self.st_test_tag, self.loc, self.colo, self.geo_info, self.loss, self.rtt ,self.max_speed, self.avg_speed)
 
     def get_rtt_info(self) -> str:
-        return '{}:{} {}_{} loss: {}% rtt: {} ms'.format(self.ip_str, self.port, self.loc, self.colo, self.loss, self.rtt)
+        return '{}:{} {}_{} {} loss: {}% rtt: {} ms'.format(self.ip_str, self.port, self.loc, self.colo, self.geo_info, self.loss, self.rtt)
 
     def get_info(self) -> str:
         return '{}:{}{} {}_{} {} loss: {}% rtt: {} ms, 下载速度(max/avg)为: {}/{} kB/s'.format(self.ip_str, self.port, self.st_test_tag, self.loc, self.colo, self.geo_info, self.loss, self.rtt, self.max_speed, self.avg_speed)
