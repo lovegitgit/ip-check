@@ -12,7 +12,7 @@ from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, WorkMode
 from ipcheck.app.config import Config
 from ipcheck.app.geo_utils import get_geo_info
 from ipcheck.app.statemachine import StateMachine
-from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address
+from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address, get_current_ts
 from ipcheck.app.ip_info import IpInfo
 
 
@@ -62,6 +62,7 @@ class IpParser:
 
     def parse(self):
         ip_set = set()
+        t1 = get_current_ts()
         host_name_args = set()
         # 先用ip 表达式解析
         for arg in self.args:
@@ -77,7 +78,11 @@ class IpParser:
                 for result in results:
                     if result:
                         ip_set.update(result)
+        t2 = get_current_ts()
+        print('解析ip 耗时: {}秒'.format(round(t2 - t1, 2)))
         ip_set = get_geo_info(ip_set)
+        t3 = get_current_ts()
+        print('获取geo 信息耗时: {}秒'.format(round(t3 - t2, 2)))
         if StateMachine().work_mode == WorkMode.IGEO_INFO:
             return ip_set
         if self.config.ro_prefer_orgs:
@@ -86,6 +91,8 @@ class IpParser:
             ip_set = filter_ip_list_by_block_orgs(ip_set, self.config.ro_block_orgs)
         if self.config.ro_prefer_locs:
             ip_set = filter_ip_list_by_locs(ip_set, self.config.ro_prefer_locs)
+        t4 = get_current_ts()
+        print('预处理ip 总计耗时: {}秒'.format(round(t4 - t1, 2)))
         return ip_set
 
     def __parse_sources(self):
@@ -177,13 +184,11 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
                 lst = [IpInfo(ip_part, int(port_part))]
         return lst
 
-    ip_set = set()
     for fn in parse_ip, parse_cidr, parse_ip_port:
         parse_list = fn()
         if parse_list:
-            ip_set.update(parse_list)
-            break
-    return ip_set
+            return parse_list
+    return []
 
 # parse hostname, eg: example.com
 def parse_ip_by_host_name(arg: str, config: Config):
