@@ -7,7 +7,7 @@ from os import path
 import random
 import socket
 import ipaddress
-from typing import List
+from typing import Iterable
 from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, WorkMode
 from ipcheck.app.config import Config
 from ipcheck.app.geo_utils import get_geo_info
@@ -16,7 +16,7 @@ from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_
 from ipcheck.app.ip_info import IpInfo
 
 
-def filter_ip_list_by_locs(ip_list: List[IpInfo], prefer_locs: List[str]):
+def filter_ip_list_by_locs(ip_list: Iterable[IpInfo], prefer_locs: Iterable[str]):
     if not StateMachine().geo_loc_avaiable:
         print('{} 数据库不可用, 跳过地区过滤... ...'.format(GEO2CITY_DB_NAME))
         return ip_list
@@ -28,7 +28,7 @@ def filter_ip_list_by_locs(ip_list: List[IpInfo], prefer_locs: List[str]):
                 break
     return fixed_list
 
-def filter_ip_list_by_orgs(ip_list: List[IpInfo], prefer_orgs: List[str]):
+def filter_ip_list_by_orgs(ip_list: Iterable[IpInfo], prefer_orgs: Iterable[str]):
     if not StateMachine().geo_asn_org_avaiable:
         print('{} 数据库不可用, 跳过org 过滤... ...'.format(GEO2ASN_DB_NAME))
         return ip_list
@@ -40,7 +40,7 @@ def filter_ip_list_by_orgs(ip_list: List[IpInfo], prefer_orgs: List[str]):
                 break
     return fixed_list
 
-def filter_ip_list_by_block_orgs(ip_list: List[IpInfo], block_orgs: List[str]):
+def filter_ip_list_by_block_orgs(ip_list: Iterable[IpInfo], block_orgs: Iterable[str]):
     if not StateMachine().geo_asn_org_avaiable:
         print('{} 数据库不可用, 跳过org过滤... ...'.format(GEO2ASN_DB_NAME))
         return ip_list
@@ -61,33 +61,32 @@ class IpParser:
         self.args = self.__parse_sources()
 
     def parse(self):
-        ip_list = []
-        host_name_args = []
+        ip_set = set()
+        host_name_args = set()
         # 先用ip 表达式解析
         for arg in self.args:
             ips = parse_ip_by_ip_expr(arg, self.config)
             if ips:
-                ip_list.extend(ips)
+                ip_set.update(ips)
             else:
-                host_name_args.append(arg)
+                host_name_args.add(arg)
         # 接着适用域名解析
         if host_name_args:
             with ThreadPoolExecutor(max_workers=16) as executor:
                 results = list(executor.map(lambda arg: parse_ip_by_host_name(arg, self.config), host_name_args))
                 for result in results:
                     if result:
-                        ip_list.extend(result)
-        ip_list = list(dict.fromkeys(ip_list))
-        ip_list = get_geo_info(ip_list)
+                        ip_set.update(result)
+        ip_set = get_geo_info(ip_set)
         if StateMachine().work_mode == WorkMode.IGEO_INFO:
-            return ip_list
+            return ip_set
         if self.config.ro_prefer_orgs:
-            ip_list = filter_ip_list_by_orgs(ip_list, self.config.ro_prefer_orgs)
+            ip_set = filter_ip_list_by_orgs(ip_set, self.config.ro_prefer_orgs)
         if self.config.ro_block_orgs:
-            ip_list = filter_ip_list_by_block_orgs(ip_list, self.config.ro_block_orgs)
+            ip_set = filter_ip_list_by_block_orgs(ip_set, self.config.ro_block_orgs)
         if self.config.ro_prefer_locs:
-            ip_list = filter_ip_list_by_locs(ip_list, self.config.ro_prefer_locs)
-        return ip_list
+            ip_set = filter_ip_list_by_locs(ip_set, self.config.ro_prefer_locs)
+        return ip_set
 
     def __parse_sources(self):
         args = []
@@ -136,7 +135,7 @@ def is_port_allowed(port_str: int, config: Config):
 
 def parse_ip_by_ip_expr(arg: str, config: Config):
     def parse_ip():
-        lst =[]
+        lst = []
         ip_str = arg
         if ip_str.startswith('[') and ip_str.endswith(']'):
             ip_str = arg[1: -1]
@@ -155,10 +154,14 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             # 避免cidr 过大导致的运行时间过久
             else:
                 sample_size = min(config.cidr_sample_ip_num, num_hosts)
-            random_hosts = set()
-            while len(random_hosts) < sample_size:
-                random_ip = ipaddress.ip_address(net.network_address + random.randint(0, num_hosts - 1))
-                random_hosts.add(random_ip)
+            if num_hosts < 2 ** 32:
+                indexes = random.sample(range(0, num_hosts), sample_size)
+            else:
+                indexes = set()
+                while len(indexes) < sample_size:
+                    n = random.randint(0, num_hosts - 1)
+                    indexes.add(n)
+            random_hosts = [ipaddress.ip_address(net.network_address + index) for index in indexes]
             lst = [IpInfo(str(ip), config.ip_port) for ip in random_hosts if is_allow_in_wb_list(str(ip), config)]
         return lst
 
@@ -174,13 +177,13 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
                 lst = [IpInfo(ip_part, int(port_part))]
         return lst
 
-    ip_list = []
+    ip_set = set()
     for fn in parse_ip, parse_cidr, parse_ip_port:
         parse_list = fn()
         if parse_list:
-            ip_list.extend(parse_list)
+            ip_set.update(parse_list)
             break
-    return ip_list
+    return ip_set
 
 # parse hostname, eg: example.com
 def parse_ip_by_host_name(arg: str, config: Config):

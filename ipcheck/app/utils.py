@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import argparse
 import functools
 import ipaddress
 import os
@@ -15,6 +16,12 @@ from tcppinglib.utils import async_hostname_lookup
 import asyncio
 import time
 
+
+class UniqueListAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        # 去重并保留顺序
+        unique = list(dict.fromkeys(values))
+        setattr(namespace, self.dest, unique)
 
 def is_ip_address(ip_str: str):
     try:

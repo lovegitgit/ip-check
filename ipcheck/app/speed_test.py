@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import List
+from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.speed_test_config import SpeedTestConfig
 from ipcheck.app.statemachine import StateMachine
@@ -18,11 +18,11 @@ urllib3.disable_warnings()
 
 class SpeedTest:
 
-    def __init__(self, ip_list: List[IpInfo], config: SpeedTestConfig) -> None:
+    def __init__(self, ip_list: Iterable[IpInfo], config: SpeedTestConfig) -> None:
         self.ip_list = ip_list
         self.config = config
 
-    def run(self) -> List[IpInfo]:
+    def run(self) -> Iterable[IpInfo]:
         if not self.config.enabled:
             print('跳过速度测试')
             return self.ip_list

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import List
+from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.statemachine import StateMachine
 from ipcheck.app.valid_test_config import ValidTestConfig
@@ -17,11 +17,11 @@ import random
 
 class ValidTest:
 
-    def __init__(self, ip_list: List[IpInfo], config: ValidTestConfig) -> None:
+    def __init__(self, ip_list: Iterable[IpInfo], config: ValidTestConfig) -> None:
         self.ip_list = ip_list
         self.config = config
 
-    def run(self) -> List[IpInfo]:
+    def run(self) -> Iterable[IpInfo]:
         if not self.config.enabled:
             print('跳过可用性测试')
             return self.ip_list

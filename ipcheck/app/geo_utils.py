@@ -4,7 +4,7 @@
 import configparser
 import os
 import geoip2.database
-from typing import List
+from typing import Iterable
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.statemachine import StateMachine
 from ipcheck.app.utils import download_file, write_file, get_json_from_net
@@ -27,8 +27,8 @@ def handle_blank_in_str(handle_str: str):
 
 
 # 获取位置信息与组织
-def get_geo_info(infos: List[IpInfo]) -> List[IpInfo]:
-    def get_loc_info(infos: List[IpInfo]) -> List[IpInfo]:
+def get_geo_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
+    def get_loc_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
         try:
             with geoip2.database.Reader(GEO2CITY_DB_PATH) as reader1:
                 StateMachine().geo_loc_avaiable = True
@@ -52,7 +52,7 @@ def get_geo_info(infos: List[IpInfo]) -> List[IpInfo]:
             print('{} 数据库异常, 无法获取IP 归属地信息, 请执行igeo-dl 重新下载!'.format(GEO2CITY_DB_NAME))
             return infos
 
-    def get_asn_org_info(infos: List[IpInfo]) -> List[IpInfo]:
+    def get_asn_org_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
         try:
             with geoip2.database.Reader(GEO2ASN_DB_PATH) as reader2:
                 StateMachine().geo_asn_org_avaiable = True

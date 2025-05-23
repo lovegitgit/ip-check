@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import List
+from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.rtt_test_config import RttTestConfig
 from ipcheck.app.ip_info import IpInfo
@@ -14,11 +14,11 @@ import asyncio
 
 class RttTest:
 
-    def __init__(self, ip_list: List[IpInfo], config: RttTestConfig) -> None:
+    def __init__(self, ip_list: Iterable[IpInfo], config: RttTestConfig) -> None:
         self.ip_list = ip_list
         self.config = config
 
-    def run(self) -> List[IpInfo]:
+    def run(self) -> Iterable[IpInfo]:
         if not self.config.enabled:
             print('跳过RTT测试')
             return self.ip_list

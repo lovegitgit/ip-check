@@ -8,13 +8,14 @@ from ipcheck.app.geo_utils import check_or_gen_def_config, download_geo_db, pars
 import argparse
 import subprocess
 import sys
+from ipcheck.app.utils import UniqueListAction
 
 from ipcheck.app.statemachine import StateMachine
 
 def get_info():
     StateMachine().work_mode = WorkMode.IGEO_INFO
     parser = argparse.ArgumentParser(description='geo-info 获取ip(s) 的归属地信息')
-    parser.add_argument("sources", nargs="+", help="待获取归属地信息的ip(s)")
+    parser.add_argument("sources", action=UniqueListAction, nargs="+", help="待获取归属地信息的ip(s)")
     args = parser.parse_args()
     config = Config()
     config.ro_ip_source = args.sources
@@ -29,12 +30,12 @@ def get_info():
 def filter_ips():
     StateMachine().work_mode = WorkMode.IP_FILTER
     parser = argparse.ArgumentParser(description='ip-filter: ip 筛选工具')
-    parser.add_argument("sources", nargs="+", help="待筛选的ip(s)")
-    parser.add_argument("-w", "--white_list", type=str, nargs='+', default=None, help='偏好ip参数, 格式为: expr1 expr2, 如8 9 会筛选8和9开头的ip')
-    parser.add_argument("-b", "--block_list", type=str, nargs='+', default=None, help='屏蔽ip参数, 格式为: expr1 expr2, 如8 9 会过滤8和9开头的ip')
-    parser.add_argument("-pl", "--prefer_locs", type=str, nargs='+', default=None, help='偏好国家地区选择, 格式为: expr1 expr2, 如hongkong japan 会筛选HongKong 和Japan 地区的ip')
-    parser.add_argument("-po", "--prefer_orgs", type=str, nargs='+', default=None, help='偏好org 选择, 格式为: expr1 expr2, 如org1 org2 会筛选org1, org2 的服务商ip')
-    parser.add_argument("-bo", "--block_orgs", type=str, nargs='+', default=None, help='屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip')
+    parser.add_argument("sources", action=UniqueListAction, nargs="+", help="待筛选的ip(s)")
+    parser.add_argument("-w", "--white_list", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好ip参数, 格式为: expr1 expr2, 如8 9 会筛选8和9开头的ip')
+    parser.add_argument("-b", "--block_list", action=UniqueListAction, type=str, nargs='+', default=None, help='屏蔽ip参数, 格式为: expr1 expr2, 如8 9 会过滤8和9开头的ip')
+    parser.add_argument("-pl", "--prefer_locs", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好国家地区选择, 格式为: expr1 expr2, 如hongkong japan 会筛选HongKong 和Japan 地区的ip')
+    parser.add_argument("-po", "--prefer_orgs", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好org 选择, 格式为: expr1 expr2, 如org1 org2 会筛选org1, org2 的服务商ip')
+    parser.add_argument("-bo", "--block_orgs", action=UniqueListAction, type=str, nargs='+', default=None, help='屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip')
     parser.add_argument("-4", "--only_v4", action="store_true", default=False, help="仅筛选ipv4")
     parser.add_argument("-6", "--only_v6", action="store_true", default=False, help="仅筛选ipv6")
     parser.add_argument("-cs", "--cr_size", type=int, default=0, help="cidr 随机抽样ip 数量限制")

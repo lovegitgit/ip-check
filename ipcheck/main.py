@@ -14,8 +14,8 @@ from ipcheck.app.statemachine import StateMachine
 from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
-from typing import List
-from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url, is_hostname, get_current_ts
+from typing import Iterable
+from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url, is_hostname, get_current_ts, UniqueListAction
 
 def print_cache():
     if StateMachine().user_inject:
@@ -49,12 +49,12 @@ def check_or_gen_def_config(def_cfg_path):
 # 从手动参数中覆盖默认config
 def load_config():
     parser = argparse.ArgumentParser(description='ip-check 参数')
-    parser.add_argument("-w", "--white_list", type=str, nargs='+', default=None, help='偏好ip参数, 格式为: expr1 expr2, 如8 9 会筛选8和9开头的ip')
-    parser.add_argument("-b", "--block_list", type=str, nargs='+', default=None, help='屏蔽ip参数, 格式为: expr1 expr2, 如8 9 会过滤8和9开头的ip')
-    parser.add_argument("-pl", "--prefer_locs", type=str, nargs='+', default=None, help='偏好国家地区选择, 格式为: expr1 expr2, 如hongkong japan 会筛选HongKong 和Japan 地区的ip')
-    parser.add_argument("-po", "--prefer_orgs", type=str, nargs='+', default=None, help='偏好org 选择, 格式为: expr1 expr2, 如org1 org2 会筛选org1, org2 的服务商ip')
-    parser.add_argument("-bo", "--block_orgs", type=str, nargs='+', default=None, help='屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip')
-    parser.add_argument("-pp", "--prefer_ports", type=int, default=None, nargs='+', help='针对ip:port 格式的测试源筛选端口, 格式为: expr1 expr2, 如443 8443 会筛选出443 和8443 端口的ip')
+    parser.add_argument("-w", "--white_list", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好ip参数, 格式为: expr1 expr2, 如8 9 会筛选8和9开头的ip')
+    parser.add_argument("-b", "--block_list", action=UniqueListAction, type=str, nargs='+', default=None, help='屏蔽ip参数, 格式为: expr1 expr2, 如8 9 会过滤8和9开头的ip')
+    parser.add_argument("-pl", "--prefer_locs", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好国家地区选择, 格式为: expr1 expr2, 如hongkong japan 会筛选HongKong 和Japan 地区的ip')
+    parser.add_argument("-po", "--prefer_orgs", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好org 选择, 格式为: expr1 expr2, 如org1 org2 会筛选org1, org2 的服务商ip')
+    parser.add_argument("-bo", "--block_orgs", action=UniqueListAction, type=str, nargs='+', default=None, help='屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip')
+    parser.add_argument("-pp", "--prefer_ports", action=UniqueListAction, type=int, default=None, nargs='+', help='针对ip:port 格式的测试源筛选端口, 格式为: expr1 expr2, 如443 8443 会筛选出443 和8443 端口的ip')
     parser.add_argument("-lv", "--max_vt_ip_count", type=int, default=0, help="最大用来检测有效(valid) ip数量限制")
     parser.add_argument("-lr", "--max_rt_ip_count", type=int, default=0, help="最大用来检测rtt ip数量限制")
     parser.add_argument("-ls", "--max_st_ip_count", type=int, default=0, help="最大用来检测下载(speed) 速度的ip数量限制")
@@ -64,7 +64,7 @@ def load_config():
     parser.add_argument("-dr", "--disable_rt", action="store_true", default=False, help="是否禁用RTT 测试")
     parser.add_argument("-dv", "--disable_vt", action="store_true", default=False, help="是否禁用可用性测试")
     parser.add_argument("-ds", "--disable_st", action="store_true", default=False, help="是否禁用速度测试")
-    parser.add_argument("source", nargs="+", help="测试源文件")
+    parser.add_argument("source", action=UniqueListAction, nargs="+", help="测试源文件")
     parser.add_argument("-o", "--output", type=str, default=None, help="输出文件")
     parser.add_argument("-f","--fast_check", action="store_true", default=False, help="是否执行快速测试")
     parser.add_argument("-s", "--speed", type=int, default=0, help="期望ip的最低网速 (kB/s)")
@@ -214,13 +214,13 @@ def load_config():
     return config
 
 
-def print_better_ips(ips: List[IpInfo]):
+def print_better_ips(ips: Iterable[IpInfo]):
     print('优选ip 如下: ')
     for ip_info in ips:
         print(ip_info)
 
 
-def write_better_ips_to_file(ips: List[IpInfo], path):
+def write_better_ips_to_file(ips: Iterable[IpInfo], path):
     with open(path, 'w', encoding='utf-8') as f:
         for ip_info in ips:
             f.write(ip_info.get_info())
