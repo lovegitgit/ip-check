@@ -79,11 +79,11 @@ class IpParser:
                     if result:
                         ip_set.update(result)
         t2 = get_current_ts()
-        if self.config.ro_verbose:
+        if StateMachine().work_mode == WorkMode.IP_CHECK:
             print('解析ip 耗时: {}秒'.format(round(t2 - t1, 2)))
         ip_set = get_geo_info(ip_set)
         t3 = get_current_ts()
-        if self.config.ro_verbose:
+        if StateMachine().work_mode == WorkMode.IP_CHECK:
             print('获取geo 信息耗时: {}秒'.format(round(t3 - t2, 2)))
         if StateMachine().work_mode == WorkMode.IGEO_INFO:
             return ip_set
@@ -94,7 +94,7 @@ class IpParser:
         if self.config.ro_prefer_locs:
             ip_set = filter_ip_list_by_locs(ip_set, self.config.ro_prefer_locs)
         t4 = get_current_ts()
-        if self.config.ro_verbose:
+        if StateMachine().work_mode == WorkMode.IP_CHECK:
             print('预处理ip 总计耗时: {}秒'.format(round(t4 - t1, 2)))
         return ip_set
 
