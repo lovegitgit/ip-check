@@ -70,7 +70,7 @@ def load_config():
     parser.add_argument("-s", "--speed", type=int, default=0, help="期望ip的最低网速 (kB/s)")
     parser.add_argument("-as", "--avg_speed", type=int, default=0, help="期望ip的最低平均网速 (kB/s)")
     parser.add_argument("-r", "--rtt", type=int, default=0, help="期望的最大rtt (ms)")
-    parser.add_argument("-l", "--loss", type=int, default=0, help="期望的最大丢包率")
+    parser.add_argument("-l", "--loss", type=int, default=-1, help="期望的最大丢包率")
     parser.add_argument("-c", "--config", type=str, default=None, help="配置文件")
     parser.add_argument("-u", "--url", type=str, default=None, help="测速地址")
     parser.add_argument("-v", "--verbose", action="store_true", default=False, help="显示调试信息")
@@ -194,7 +194,7 @@ def load_config():
         config.st_ip_limit_count = ls
     if lb > 0:
         config.st_bt_ip_limit = lb
-    if loss > 0:
+    if loss >= 0:
         config.rt_max_loss = loss
     config.ro_only_v4 = args.only_v4
     config.ro_only_v6 = args.only_v6
