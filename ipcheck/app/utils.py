@@ -84,7 +84,15 @@ def find_txt_in_dir(dir):
 def adjust_list_by_size(src_list: list, target_size):
     if (target_size > len(src_list)):
         return src_list
-    return random.sample(src_list, target_size)
+    if target_size < 2 ** 32:
+        return random.sample(src_list, target_size)
+    else:
+        indexes = set()
+        total_size = len(src_list)
+        while len(indexes) < target_size:
+            n = random.randint(0, total_size - 1)
+            indexes.add(n)
+        return [src_list[i] for i in indexes]
 
 
 def gen_time_desc():
