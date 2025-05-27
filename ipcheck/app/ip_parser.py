@@ -12,7 +12,7 @@ from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, WorkMode
 from ipcheck.app.config import Config
 from ipcheck.app.geo_utils import get_geo_info
 from ipcheck.app.statemachine import StateMachine
-from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address, get_current_ts
+from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address, get_current_ts, floyd_sample
 from ipcheck.app.ip_info import IpInfo
 
 
@@ -167,10 +167,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             if num_hosts < 2 ** 32:
                 indexes = random.sample(range(0, num_hosts), sample_size)
             else:
-                indexes = set()
-                while len(indexes) < sample_size:
-                    n = random.randint(0, num_hosts - 1)
-                    indexes.add(n)
+                indexes = floyd_sample(num_hosts, sample_size)
             random_hosts = [ipaddress.ip_address(net.network_address + index) for index in indexes]
             lst = [IpInfo(str(ip), config.ip_port) for ip in random_hosts if is_allow_in_wb_list(str(ip), config)]
         return lst

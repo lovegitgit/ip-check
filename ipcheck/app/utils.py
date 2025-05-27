@@ -79,6 +79,21 @@ def find_txt_in_dir(dir):
                 L.append(file)
     return L
 
+def floyd_sample(n: int, k: int):
+    selected = {}
+    result = set()
+
+    if k > n // 2:
+        while len(result) < k:
+            result.add(random.randint(0, n - 1))
+    else:
+        for i in range(n - k, n):
+            r = random.randint(0, i)
+            val = selected.get(r, r)
+            selected[r] = selected.get(i, i)
+            result.add(val)
+
+    return result
 
 # 通过指定目标list 大小, 从src_list 生成新的list
 def adjust_list_by_size(src_list: list, target_size):
@@ -87,11 +102,8 @@ def adjust_list_by_size(src_list: list, target_size):
     if target_size < 2 ** 32:
         return random.sample(src_list, target_size)
     else:
-        indexes = set()
         total_size = len(src_list)
-        while len(indexes) < target_size:
-            n = random.randint(0, total_size - 1)
-            indexes.add(n)
+        indexes = floyd_sample(total_size, target_size)
         return [src_list[i] for i in indexes]
 
 
