@@ -82,6 +82,8 @@ def find_txt_in_dir(dir):
 def floyd_sample(n: int, k: int):
     selected = {}
     result = set()
+    if n <= k:
+        return set(range(n))
 
     if k > n // 2:
         while len(result) < k:
