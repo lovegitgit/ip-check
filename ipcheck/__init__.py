@@ -54,7 +54,7 @@ interval = 1
 # rtt 测试多线程数量
 thread_num = 8
 # rtt 测试的网络请求timeout, 单位 s
-timeout = 3
+timeout = 0.33
 # rtt 测试的延时及格值, 单位 ms
 max_rtt = 300
 # rtt 测试次数

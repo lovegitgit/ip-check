@@ -92,7 +92,7 @@ class Config(CommonConfig):
         # rtt 测试多线程数量
         self.rt_thread_num = 8
         # rtt 测试的网络请求timeout, 单位 s
-        self.rt_timeout = 3
+        self.rt_timeout = 0.33
         # rtt 测试及格线
         self.rt_max_rtt = 300
         # rtt 测试次数
