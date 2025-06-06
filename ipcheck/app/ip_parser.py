@@ -93,10 +93,11 @@ class IpParser:
             ip_set = filter_ip_list_by_block_orgs(ip_set, self.config.ro_block_orgs)
         if self.config.ro_prefer_locs:
             ip_set = filter_ip_list_by_locs(ip_set, self.config.ro_prefer_locs)
+        ip_list = list(ip_set)
         t4 = get_current_ts()
         if StateMachine().work_mode == WorkMode.IP_CHECK:
             print('预处理ip 总计耗时: {}秒'.format(round(t4 - t1, 2)))
-        return ip_set
+        return ip_list
 
     def __parse_sources(self):
         args = []
@@ -200,7 +201,6 @@ def parse_ip_by_host_name(arg: str, config: Config):
             elif config.ro_only_v6:
                 resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET6))
         else:
-            resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET))
-            resolve_ips.extend(get_resolve_ips(arg, config.ip_port, socket.AF_INET6))
+            resolve_ips.extend(get_resolve_ips(arg, config.ip_port))
     ip_list = [IpInfo(ip, config.ip_port, hostname=arg) for ip in resolve_ips if is_allow_in_wb_list(ip, config)]
     return ip_list
