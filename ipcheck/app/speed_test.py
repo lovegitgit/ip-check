@@ -105,6 +105,10 @@ class SpeedTest:
             start = original_start
             old_size = size
             while not download_exit:
+                if StateMachine().ipcheck_stage != IpcheckStage.SPEED_TEST:
+                    stop_signal = True
+                    ip_info.st_test_tag = '*'
+                    break
                 time.sleep(0.1)
                 end = time.time()
                 if end - start > 0.9:
@@ -115,8 +119,10 @@ class SpeedTest:
                             break
                         start = end
                         continue
+                    if end - real_start < 0.1:
+                        continue
                     speed_now = int((cur_size - old_size) / ((end - start) * 1024))
-                    avg_speed = int(cur_size / ((end - real_start) * 1024))
+                    avg_speed = int(cur_size / ((end - real_start) * 1024)) if end - real_start > 0.9 else speed_now
                     content = '  当前下载速度(cur/avg)为: {}/{} kB/s'.format(speed_now, avg_speed)
                     show_freshable_content(content)
                     if speed_now > max_speed:
@@ -133,10 +139,6 @@ class SpeedTest:
                             break
                 if end - real_start > self.config.download_time:
                     stop_signal = True
-                    break
-                if StateMachine().ipcheck_stage != IpcheckStage.SPEED_TEST:
-                    stop_signal = True
-                    ip_info.st_test_tag = '*'
                     break
 
         t1 = threading.Thread(target=download, daemon=True)

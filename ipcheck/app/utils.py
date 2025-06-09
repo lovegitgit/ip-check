@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 import requests
 from tqdm import tqdm
 import re
-from tcppinglib.utils import async_hostname_lookup
+import socket
 import asyncio
 import time
 
@@ -22,6 +22,15 @@ class UniqueListAction(argparse.Action):
         # 去重并保留顺序
         unique = list(dict.fromkeys(values))
         setattr(namespace, self.dest, unique)
+
+def run_async_in_thread(coro):
+    """在子线程中运行 asyncio 协程"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
 
 def is_ip_address(ip_str: str):
     try:
@@ -54,10 +63,34 @@ def is_hostname(name):
     pattern = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})+$"
     return re.match(pattern, name) is not None
 
-def get_resolve_ips(hostname, port, family):
+def get_resolve_ips(hostname, port, family=socket.AF_UNSPEC):
+    async def async_hostname_lookup(hostname: str, port: int = 80, family=socket.AF_UNSPEC):
+        """
+        异步解析主机名，支持 A 和 AAAA 记录
+        :param hostname: 要解析的域名
+        :param port: 端口号
+        :param family: 地址族，支持 socket.AF_INET, socket.AF_INET6, 或 socket.AF_UNSPEC（全部）
+        :return: List of (family, address)
+        """
+        loop = asyncio.get_running_loop()
+        results = []
+        try:
+            addr_info = await loop.getaddrinfo(
+                host=hostname,
+                port=port,
+                family=family,
+                type=socket.SOCK_STREAM,
+                proto=socket.IPPROTO_TCP,
+                flags=socket.AI_ADDRCONFIG
+            )
+            results = [info[4][0] for info in addr_info]
+        except socket.gaierror as e:
+            pass
+        return results
+
     ips = []
     try:
-        ips = asyncio.run(async_hostname_lookup(hostname, port, family))
+        ips = run_async_in_thread(async_hostname_lookup(hostname, port, family))
     except:
         pass
     return ips
@@ -172,6 +205,22 @@ def get_json_from_net(url: str, proxy=None):
 
 def get_current_ts() -> float:
     return time.time()
+
+def get_perfcounter() -> float:
+    return time.perf_counter()
+
+def sleep_secs(secs: float):
+    time.sleep(secs)
+
+def get_family_addr(host, port):
+    family = None
+    sockaddr = None
+    try:
+        addr_info = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+        family, _, _, _, sockaddr = addr_info[0]
+    except:
+        pass
+    return family, sockaddr
 
 def singleton(cls):
     """

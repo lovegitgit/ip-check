@@ -54,15 +54,15 @@ interval = 1
 # rtt 测试多线程数量
 thread_num = 8
 # rtt 测试的网络请求timeout, 单位 s
-timeout = 3
-# rtt 测试网络请求重试次数
-max_retry = 6
+timeout = 0.33
 # rtt 测试的延时及格值, 单位 ms
 max_rtt = 300
 # rtt 测试次数
 test_count = 13
 # 最大丢包率控制, 单位 百分比
 max_loss = 100
+# 是否开启快速测试
+fast_check = False
 
 # 下载速度测试配置
 [speed test]

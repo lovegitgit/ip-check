@@ -92,15 +92,15 @@ class Config(CommonConfig):
         # rtt 测试多线程数量
         self.rt_thread_num = 8
         # rtt 测试的网络请求timeout, 单位 s
-        self.rt_timeout = 3
-        # rtt 测试网络请求重试次数
-        self.rt_max_retry = 6
+        self.rt_timeout = 0.33
         # rtt 测试及格线
         self.rt_max_rtt = 300
         # rtt 测试次数
         self.rt_test_count = 13
         # 最大丢包率
         self.rt_max_loss = 100
+        # 是否开启快速测试
+        self.rt_fast_check = False
 
         # 下载速度测试 speed test 测试选项
         # 是否测试下载速度

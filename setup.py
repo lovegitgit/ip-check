@@ -34,7 +34,6 @@ setup(
         'ipaddress~=1.0.23',
         'requests',
         'requests[socks]',
-        'tcppinglib~=2.0.3',
         'tqdm',
         'urllib3~=1.26.15',
         'importlib-metadata',
