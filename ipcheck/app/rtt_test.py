@@ -146,7 +146,7 @@ def tcpping(
             rtt = (get_perfcounter() - start)
             rtts.append(rtt)
             packets_sent += 1
-        except socket.timeout as e:
+        except (socket.timeout, OSError) as e:
             if print_err:
                 print(e)
             packets_lost += 1
