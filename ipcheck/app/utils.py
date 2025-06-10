@@ -88,9 +88,25 @@ def get_resolve_ips(hostname, port, family=socket.AF_UNSPEC):
             pass
         return results
 
+    def hostname_lookup(hostname: str, port: int = 80, family=socket.AF_UNSPEC):
+        results = []
+        try:
+            addr_info = socket.getaddrinfo(
+                host=hostname,
+                port=port,
+                family=family,
+                type=socket.SOCK_STREAM,
+                proto=socket.IPPROTO_TCP,
+                flags=socket.AI_ADDRCONFIG
+            )
+            results = [info[4][0] for info in addr_info]
+        except socket.gaierror as e:
+            pass
+        return results
+
     ips = []
     try:
-        ips = run_async_in_thread(async_hostname_lookup(hostname, port, family))
+        ips = hostname_lookup(hostname, port, family)
     except:
         pass
     return ips
