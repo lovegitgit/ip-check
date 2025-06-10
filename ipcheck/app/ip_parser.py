@@ -73,7 +73,7 @@ class IpParser:
                 host_name_args.add(arg)
         # 接着适用域名解析
         if host_name_args:
-            with ThreadPoolExecutor(max_workers=16) as executor:
+            with ThreadPoolExecutor(max_workers=64) as executor:
                 results = list(executor.map(lambda arg: parse_ip_by_host_name(arg, self.config), host_name_args))
                 for result in results:
                     if result:

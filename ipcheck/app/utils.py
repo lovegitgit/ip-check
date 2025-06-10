@@ -63,53 +63,50 @@ def is_hostname(name):
     pattern = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})+$"
     return re.match(pattern, name) is not None
 
-def get_resolve_ips(hostname, port, family=socket.AF_UNSPEC):
-    async def async_hostname_lookup(hostname: str, port: int = 80, family=socket.AF_UNSPEC):
-        """
-        异步解析主机名，支持 A 和 AAAA 记录
-        :param hostname: 要解析的域名
-        :param port: 端口号
-        :param family: 地址族，支持 socket.AF_INET, socket.AF_INET6, 或 socket.AF_UNSPEC（全部）
-        :return: List of (family, address)
-        """
-        loop = asyncio.get_running_loop()
-        results = []
-        try:
-            addr_info = await loop.getaddrinfo(
-                host=hostname,
-                port=port,
-                family=family,
-                type=socket.SOCK_STREAM,
-                proto=socket.IPPROTO_TCP,
-                flags=socket.AI_ADDRCONFIG
-            )
-            results = [info[4][0] for info in addr_info]
-        except socket.gaierror as e:
-            pass
-        return results
-
-    def hostname_lookup(hostname: str, port: int = 80, family=socket.AF_UNSPEC):
-        results = []
-        try:
-            addr_info = socket.getaddrinfo(
-                host=hostname,
-                port=port,
-                family=family,
-                type=socket.SOCK_STREAM,
-                proto=socket.IPPROTO_TCP,
-                flags=socket.AI_ADDRCONFIG
-            )
-            results = [info[4][0] for info in addr_info]
-        except socket.gaierror as e:
-            pass
-        return results
-
-    ips = []
+async def async_hostname_lookup(hostname: str, port: int = 80, family=socket.AF_UNSPEC, print_err=False):
+    """
+    异步解析主机名，支持 A 和 AAAA 记录
+    :param hostname: 要解析的域名
+    :param port: 端口号
+    :param family: 地址族，支持 socket.AF_INET, socket.AF_INET6, 或 socket.AF_UNSPEC（全部）
+    :return: List of (family, address)
+    """
+    loop = asyncio.get_running_loop()
+    results = []
     try:
-        ips = hostname_lookup(hostname, port, family)
-    except:
-        pass
-    return ips
+        addr_info = await loop.getaddrinfo(
+            host=hostname,
+            port=port,
+            family=family,
+            type=socket.SOCK_STREAM,
+            proto=socket.IPPROTO_TCP,
+            flags=socket.AI_ADDRCONFIG
+        )
+        results = [info[4][0] for info in addr_info]
+    except (socket.gaierror, OSError):
+        if print_err:
+            print(f'resolve {hostname} error!')
+    return results
+
+def hostname_lookup(hostname: str, port: int = 80, family=socket.AF_UNSPEC, print_err=False):
+    results = []
+    try:
+        addr_info = socket.getaddrinfo(
+            host=hostname,
+            port=port,
+            family=family,
+            type=socket.SOCK_STREAM,
+            proto=socket.IPPROTO_TCP,
+            flags=socket.AI_ADDRCONFIG
+        )
+        results = [info[4][0] for info in addr_info]
+    except (socket.gaierror, OSError):
+        if print_err:
+            print(f'resolve {hostname} error!')
+    return results
+
+def get_resolve_ips(hostname, port, family=socket.AF_UNSPEC):
+    return hostname_lookup(hostname, port, family)
 
 def is_valid_port(port_str):
     try:
