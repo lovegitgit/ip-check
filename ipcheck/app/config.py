@@ -63,7 +63,7 @@ class Config(CommonConfig):
         # 是否测试可用性
         self.vt_enabled = True
         # 限制参与valid 测试的ip 数量
-        self.vt_ip_limit_count = 1500
+        self.vt_ip_limit_count = 100000
         # 可用性检测域名
         self.vt_host_name = 'cloudflare.com'
         # 是否使用user-agnet
@@ -73,11 +73,11 @@ class Config(CommonConfig):
         # 可用性测试多线程数量
         self.vt_thread_num = 64
         # 可用性测试时的网络请求重试次数
-        self.vt_max_retry = 4
+        self.vt_max_retry = 2
         # 可用性测试retry 间隔因子
         self.vt_retry_factor = 0.3
         # 可用性测试的网络请求timeout, 单位 s
-        self.vt_timeout = 3.5
+        self.vt_timeout = 1.5
         # 可用性测试检测的key
         self.vt_check_key = 'h'
         # # 是否检测地区信息, draft
@@ -86,17 +86,17 @@ class Config(CommonConfig):
         # 延时rtt test 测试选项
         self.rt_enabled = True
         # 限制参与rtt 测试的ip 数量
-        self.rt_ip_limit_count = 1000
+        self.rt_ip_limit_count = 100000
         # rtt tcpping 间隔
-        self.rt_interval = 1
+        self.rt_interval = 0.01
         # rtt 测试多线程数量
-        self.rt_thread_num = 8
+        self.rt_thread_num = 32
         # rtt 测试的网络请求timeout, 单位 s
-        self.rt_timeout = 0.33
+        self.rt_timeout = 0.5
         # rtt 测试及格线
         self.rt_max_rtt = 300
         # rtt 测试次数
-        self.rt_test_count = 13
+        self.rt_test_count = 10
         # 最大丢包率
         self.rt_max_loss = 100
         # 是否开启快速测试
@@ -106,7 +106,7 @@ class Config(CommonConfig):
         # 是否测试下载速度
         self.st_enabled = True
         # 参与测速ip 的数量限制
-        self.st_ip_limit_count = 1000
+        self.st_ip_limit_count = 100000
         # 测试下载文件的域名
         self.st_host_name = 'cloudflaremirrors.com'
         # 是否使用user-agent

@@ -24,7 +24,7 @@ cidr_sample_ip_num = 16
 # 是否测试可用性
 enabled = True
 # 限制参与valid 测试的ip 数量
-ip_limit_count = 1500
+ip_limit_count = 100000
 # 可用性检测域名
 host_name = cloudflare.com
 # 使用user-agent
@@ -34,31 +34,29 @@ path = /cdn-cgi/trace
 # 可用性测试多线程数量
 thread_num = 64
 # 可用性测试时的网络请求重试次数
-max_retry = 4
+max_retry = 2
 # retry, backoff_factor
 retry_factor = 0.3
 # 可用性测试的网络请求timeout, 单位 s
-timeout = 3.5
+timeout = 1.5
 # 可用性测试检测的key
 check_key = h
-# 是否获取IP 机场码信息, 当前仅支持cf ip, 如果测试其他cdn 需要关闭, 此选项已废弃
-# get_loc = True
 
 # rtt 测试配置
 [rtt test]
 enabled = True
 # 限制参与rtt 测试的ip 数量
-ip_limit_count = 1000
+ip_limit_count = 100000
 # rtt tcpping 间隔
-interval = 1
+interval = 0.01
 # rtt 测试多线程数量
-thread_num = 8
+thread_num = 32
 # rtt 测试的网络请求timeout, 单位 s
-timeout = 0.33
+timeout = 0.5
 # rtt 测试的延时及格值, 单位 ms
 max_rtt = 300
 # rtt 测试次数
-test_count = 13
+test_count = 10
 # 最大丢包率控制, 单位 百分比
 max_loss = 100
 # 是否开启快速测试
@@ -69,7 +67,7 @@ fast_check = False
 # 是否开启速度测试
 enabled = True
 # 限制参与速度测试的ip 数量
-ip_limit_count = 1000
+ip_limit_count = 100000
 # 测试下载文件的域名
 host_name = speed.cloudflare.com
 # 使用user-agent
