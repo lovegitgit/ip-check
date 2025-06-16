@@ -60,6 +60,7 @@ class RttTest:
                         interval=self.config.interval,
                         timeout=self.config.timeout,
                         max_loss=self.config.max_loss,
+                        max_rtt=self.config.max_rtt,
                         fast_check=self.config.fast_check)
 
 async def async_tcpping(
@@ -68,6 +69,7 @@ async def async_tcpping(
     timeout: float = 5,
     interval: float = 3,
     max_loss: float = 100,
+    max_rtt: float = 10000,
     fast_check: bool = False,
     print_err: bool = False
 ):
@@ -102,8 +104,9 @@ async def async_tcpping(
             packets_lost += 1
         finally:
             s.close()
-        if fast_check and (packets_lost / count) * 100 > max_loss:
-            return ipinfo
+        if fast_check:
+            if (packets_lost / count) * 100 > max_loss or (sum(rtts) * 1000 / (count - packets_lost)) > max_rtt:
+                return ipinfo
         if statemachine.ipcheck_stage != IpcheckStage.RTT_TEST:
             return ipinfo
     if packets_sent == 0:
@@ -118,6 +121,7 @@ def tcpping(
     timeout: float = 5,
     interval: float = 3,
     max_loss: float = 100,
+    max_rtt: float = 10000,
     fast_check: bool = False,
     print_err: bool = False
 ):
@@ -152,8 +156,9 @@ def tcpping(
             packets_lost += 1
         finally:
             s.close()
-        if fast_check and (packets_lost / count) * 100 > max_loss:
-            return ipinfo
+        if fast_check:
+            if (packets_lost / count) * 100 > max_loss or (sum(rtts) * 1000 / (count - packets_lost)) > max_rtt:
+                return ipinfo
         if statemachine.ipcheck_stage != IpcheckStage.RTT_TEST:
             return ipinfo
     if packets_sent == 0:
