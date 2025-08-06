@@ -156,6 +156,8 @@ def tcpping(
             packets_lost += 1
         finally:
             s.close()
+        if count == packets_lost:
+            return ipinfo
         if fast_check:
             if (packets_lost / count) * 100 > max_loss or (sum(rtts) * 1000 / (count - packets_lost)) > max_rtt:
                 return ipinfo
