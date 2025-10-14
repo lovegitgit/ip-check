@@ -41,7 +41,7 @@ def is_ip_address(ip_str: str):
 
 def parse_url(url: str):
     parsed_url = urlparse(url)
-    return parsed_url.hostname, parsed_url.path
+    return parsed_url.hostname, (parsed_url.path + ('?' + parsed_url.query if parsed_url.query else ''))
 
 def is_ip_network(net_str: str):
     try:

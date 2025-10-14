@@ -5,7 +5,7 @@ from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.speed_test_config import SpeedTestConfig
 from ipcheck.app.statemachine import StateMachine
-from ipcheck.app.utils import adjust_list_by_size, show_freshable_content
+from ipcheck.app.utils import adjust_list_by_size, show_freshable_content, parse_url
 import threading
 import urllib3
 from ipcheck.app.ip_info import IpInfo
@@ -21,6 +21,7 @@ class SpeedTest:
     def __init__(self, ip_list: Iterable[IpInfo], config: SpeedTestConfig) -> None:
         self.ip_list = ip_list
         self.config = config
+        self.host_name, self.file_path = parse_url(self.config.url)
 
     def run(self) -> Iterable[IpInfo]:
         if not self.config.enabled:
@@ -71,17 +72,17 @@ class SpeedTest:
             nonlocal download_exit, has_error
             pool = urllib3.HTTPSConnectionPool(
                 ip_info.ip,
-                assert_hostname=self.config.host_name,
-                server_hostname=self.config.host_name,
+                assert_hostname=self.host_name,
+                server_hostname=self.host_name,
                 port=ip_info.port,
                 cert_reqs='CERT_NONE')
             headers = {
-                'Host': self.config.host_name,
+                'Host': self.host_name,
             }
             if self.config.user_agent:
                 headers.update({'User-Agent': random.choice(USER_AGENTS)})
             try:
-                with pool.urlopen('GET', self.config.file_path,
+                with pool.urlopen('GET', self.file_path,
                                  redirect=True,
                                  headers=headers,
                                  assert_same_host=False,

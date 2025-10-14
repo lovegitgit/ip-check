@@ -107,12 +107,10 @@ class Config(CommonConfig):
         self.st_enabled = True
         # 参与测速ip 的数量限制
         self.st_ip_limit_count = 100000
-        # 测试下载文件的域名
-        self.st_host_name = 'cloudflaremirrors.com'
+        # 测试下载文件的url
+        self.st_url = 'https://speed.cloudflare.com/__down?bytes=500000000'
         # 是否使用user-agent
         self.st_user_agent = False
-        # 测试下载文件的路径
-        self.st_file_path = '/archlinux/iso/latest/archlinux-x86_64.iso'
         # 下载测试时网络请求的重试次数
         self.st_max_retry = 10
         # 下载测试retry 间隔因子
