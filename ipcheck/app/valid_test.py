@@ -72,7 +72,7 @@ class ValidTest:
             headers.update({'User-Agent': random.choice(USER_AGENTS)})
         try:
             with pool.urlopen('GET', self.config.path,
-                                               retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor),
+                                               retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor, respect_retry_after_header=False),
                                                headers=headers,
                                                assert_same_host=False,
                                                timeout=self.config.timeout,

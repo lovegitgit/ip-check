@@ -52,7 +52,7 @@ class SpeedTest:
             test_ip_info = self.__test(test_ip_info)
             StateMachine.cache(test_ip_info)
             print(test_ip_info.get_info())
-            if test_ip_info.max_speed > self.config.download_speed and test_ip_info.avg_speed > self.config.avg_download_speed:
+            if test_ip_info.max_speed >= self.config.download_speed and test_ip_info.avg_speed >= self.config.avg_download_speed:
                 passed_ips.append(test_ip_info)
             if self.config.bt_ip_limit > 0 and len(passed_ips) >= self.config.bt_ip_limit:
                 break
@@ -88,7 +88,7 @@ class SpeedTest:
                                  assert_same_host=False,
                                  timeout=self.config.timeout,
                                  preload_content=False,
-                                 retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor)) as r:
+                                 retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor, respect_retry_after_header=False)) as r:
                     nonlocal size, real_start
                     for chunk in r.stream():
                         if real_start == 0:
