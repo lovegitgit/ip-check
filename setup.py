@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(
     name='ip-check',
-    version='2.2.9',
+    version='2.3.0',
     description='Powerful cdn network speed test utils.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -35,7 +35,7 @@ setup(
         'requests',
         'requests[socks]',
         'tqdm',
-        'urllib3~=1.26.15',
+        'urllib3~=2.5.0',
         'importlib-metadata',
     ],
 )
