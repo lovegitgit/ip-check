@@ -31,11 +31,11 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         'geoip2',
-        'ipaddress~=1.0.23',
+        'ipaddress',
         'requests',
         'requests[socks]',
         'tqdm',
-        'urllib3~=2.5.0',
+        'urllib3 >= 2.2.3',
         'importlib-metadata',
     ],
 )
