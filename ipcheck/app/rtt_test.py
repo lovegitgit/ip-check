@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+import errno
 import socket
 from typing import Iterable
 from ipcheck import IpcheckStage
@@ -144,18 +145,21 @@ def tcpping(
         s = socket.socket(family=family, type=socket.SOCK_STREAM)
         s.setblocking(False)
         s.settimeout(timeout)
-        try:
-            start = get_perfcounter()
-            s.connect(sockaddr)
-            rtt = (get_perfcounter() - start)
+        start = get_perfcounter()
+        err = s.connect_ex(sockaddr)
+        end = get_perfcounter()
+        if err == 0:
+            rtt = (end - start)
             rtts.append(rtt)
             packets_sent += 1
-        except (socket.timeout, OSError) as e:
-            if print_err:
-                print(e)
+        else:
             packets_lost += 1
-        finally:
+            if print_err:
+                print(f'rtt test {ipinfo.ip} returns {err}')
+        try:
             s.close()
+        except:
+            pass
         if count == packets_lost:
             return ipinfo
         if fast_check:
