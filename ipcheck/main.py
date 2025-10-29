@@ -97,6 +97,10 @@ def load_config():
     config = Config()
     config.ro_verbose = args.verbose
     print('是否开启调试信息:', config.ro_verbose)
+    if config.ro_verbose:
+        config.vt_print_err = True
+        config.rt_print_err = True
+        config.st_print_err = True
     config.ro_ip_source = args.source
     print('测试源文件为:', config.ro_ip_source)
     block_list, white_list = args.block_list, args.white_list

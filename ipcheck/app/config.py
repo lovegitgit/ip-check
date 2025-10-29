@@ -80,8 +80,8 @@ class Config(CommonConfig):
         self.vt_timeout = 1.5
         # 可用性测试检测的key
         self.vt_check_key = 'h'
-        # # 是否检测地区信息, draft
-        # self.vt_get_loc = True
+        # 是否打印错误信息
+        self.vt_print_err = False
 
         # 延时rtt test 测试选项
         self.rt_enabled = True
@@ -101,6 +101,8 @@ class Config(CommonConfig):
         self.rt_max_loss = 100
         # 是否开启快速测试
         self.rt_fast_check = False
+        # 是否打印错误信息
+        self.rt_print_err = False
 
         # 下载速度测试 speed test 测试选项
         # 是否测试下载速度
@@ -129,6 +131,8 @@ class Config(CommonConfig):
         self.st_bt_ip_limit = 0
         # 是否丢弃测速中途异常ip
         self.st_rm_err_ip = False
+        # 是否打印错误信息
+        self.st_print_err = False
 
         if self.CONFIG_PATH:
             self.__update(self.CONFIG_PATH)

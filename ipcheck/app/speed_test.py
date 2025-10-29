@@ -96,8 +96,10 @@ class SpeedTest:
                         size += len(chunk)
                         if stop_signal:
                             break
-            except:
+            except Exception as e:
                 has_error = True
+                if self.config.print_err:
+                    print(f'spped test for {ip_info.simple_info} encounters error {e}')
             download_exit = True
 
         def cal_speed():

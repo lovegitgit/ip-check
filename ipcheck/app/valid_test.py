@@ -92,6 +92,7 @@ class ValidTest:
                         res = ip_info
                 elif r.status == 200:
                     res = ip_info
-        except:
-            pass
+        except Exception as e:
+            if self.config.print_err:
+                print(f'valid test for {ip_info.simple_info} encounters err {e}')
         return res

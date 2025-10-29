@@ -56,6 +56,10 @@ class IpInfo:
             res = '{}({})'.format(self.hostname, res)
         return res
 
+    @property
+    def simple_info(self) -> str:
+        return f'({self.ip_str}:{self.port})'
+
     def __eq__(self, __value: object) -> bool:
         if isinstance(__value, IpInfo):
             return __value.ip == self.ip and __value.port == self.port

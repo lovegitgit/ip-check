@@ -62,7 +62,8 @@ class RttTest:
                         timeout=self.config.timeout,
                         max_loss=self.config.max_loss,
                         max_rtt=self.config.max_rtt,
-                        fast_check=self.config.fast_check)
+                        fast_check=self.config.fast_check,
+                        print_err=self.config.print_err)
 
 async def async_tcpping(
     ipinfo,
@@ -155,7 +156,7 @@ def tcpping(
         else:
             packets_lost += 1
             if print_err:
-                print(f'rtt test {ipinfo.ip} returns {err}')
+                print(f'rtt test for {ipinfo.simple_info} returns {err}')
         try:
             s.close()
         except:
