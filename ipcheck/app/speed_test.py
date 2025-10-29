@@ -5,11 +5,10 @@ from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.speed_test_config import SpeedTestConfig
 from ipcheck.app.statemachine import StateMachine
-from ipcheck.app.utils import adjust_list_by_size, show_freshable_content, parse_url
+from ipcheck.app.utils import adjust_list_by_size, show_freshable_content, parse_url, get_perfcounter, sleep_secs
 import threading
 import urllib3
 from ipcheck.app.ip_info import IpInfo
-import time
 import random
 from ipcheck import USER_AGENTS
 
@@ -92,7 +91,7 @@ class SpeedTest:
                     nonlocal size, real_start
                     for chunk in r.stream():
                         if real_start == 0:
-                            real_start = time.time()
+                            real_start = get_perfcounter()
                         size += len(chunk)
                         if stop_signal:
                             break
@@ -104,7 +103,7 @@ class SpeedTest:
 
         def cal_speed():
             nonlocal size, stop_signal, max_speed, avg_speed, real_start
-            original_start = time.time()
+            original_start = get_perfcounter()
             start = original_start
             old_size = size
             while not download_exit:
@@ -112,8 +111,8 @@ class SpeedTest:
                     stop_signal = True
                     ip_info.st_test_tag = '*'
                     break
-                time.sleep(0.1)
-                end = time.time()
+                sleep_secs(0.1)
+                end = get_perfcounter()
                 if end - start > 0.9:
                     cur_size = size
                     if cur_size == 0:
