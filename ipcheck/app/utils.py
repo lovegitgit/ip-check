@@ -180,6 +180,7 @@ def print_file_content(file_path: str):
         with open(file_path, 'r', encoding='utf-8') as f:
             for ct in f.readlines():
                 print(ct, end='')
+            print()
     except Exception as e:
         print(f'读取{file_path} 失败: {e}')
 
