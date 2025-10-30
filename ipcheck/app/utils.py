@@ -7,6 +7,7 @@ import ipaddress
 import os
 import random
 from datetime import datetime
+import shutil
 import sys
 from urllib.parse import urlparse
 import requests
@@ -167,6 +168,20 @@ def show_freshable_content(content: str):
 def write_file(content: str, path: str):
     with open(path, 'w', encoding='utf-8') as f:
         f.write(content)
+
+def copy_file(src: str, dst: str):
+    try:
+        shutil.copy2(src, dst)
+    except Exception as e:
+        raise RuntimeError(f'拷贝{src} 到{dst} 遇到错误: {e}')
+
+def print_file_content(file_path: str):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for ct in f.readlines():
+                print(ct, end='')
+    except Exception as e:
+        print(f'读取{file_path} 失败: {e}')
 
 def download_file(url, path, proxy):
     # 发起请求并获取响应对象

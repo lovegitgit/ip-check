@@ -7,10 +7,10 @@ import geoip2.database
 from typing import Iterable
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.statemachine import StateMachine
-from ipcheck.app.utils import download_file, write_file, get_json_from_net
+from ipcheck.app.utils import download_file, copy_file, get_json_from_net
 import json
 
-from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, GEO2CITY_DB_PATH, GEO2ASN_DB_PATH, GEO_CONFIG_PATH, GEO_DEFAULT_CONFIG, GEO_VERSION_PATH
+from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, GEO2CITY_DB_PATH, GEO2ASN_DB_PATH, GEO_CONFIG_PATH, GEO_DEF_CONFIG_PATH, GEO_VERSION_PATH
 
 def download_geo_db(url :str, path:str, proxy=None):
     print('正在下载geo database ... ...')
@@ -128,5 +128,5 @@ def save_version(version: json):
 def check_or_gen_def_config():
     if not os.path.exists(GEO_CONFIG_PATH):
         print('警告: 配置文件不存在, 正在生成默认配置... ...')
-        write_file(GEO_DEFAULT_CONFIG, GEO_CONFIG_PATH)
+        copy_file(GEO_DEF_CONFIG_PATH, GEO_CONFIG_PATH)
         print('配置文件已生成位于 {}, 请按需要修改!'.format(GEO_CONFIG_PATH))

@@ -5,7 +5,7 @@ import os
 import sys
 import subprocess
 import signal
-from ipcheck import WorkMode, IpcheckStage, __version__
+from ipcheck import WorkMode, IpcheckStage, __version__, IP_CHECK_DEF_CONFIG_PATH, IP_CHECK_CONFIG_PATH
 from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
 import argparse
@@ -15,7 +15,7 @@ from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
 from typing import Iterable
-from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, write_file, parse_url, is_hostname, get_current_ts, UniqueListAction
+from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, parse_url, is_hostname, get_current_ts, UniqueListAction, copy_file, print_file_content
 
 def print_cache():
     if StateMachine().user_inject:
@@ -42,8 +42,7 @@ signal.signal(signal.SIGINT, signal_handler)
 def check_or_gen_def_config(def_cfg_path):
     if not os.path.exists(def_cfg_path):
         print('警告: 配置文件不存在, 正在生成默认配置... ...')
-        from ipcheck import IP_CHECK_DEFAULT_CONFIG
-        write_file(IP_CHECK_DEFAULT_CONFIG, def_cfg_path)
+        copy_file(IP_CHECK_DEF_CONFIG_PATH, def_cfg_path)
         print('配置文件已生成位于 {}'.format(def_cfg_path))
 
 # 从手动参数中覆盖默认config
@@ -86,12 +85,12 @@ def load_config():
     )
     args = parser.parse_args()
     config_path = args.config
-    if config_path and os.path.exists(config_path):
-        pass
+    if config_path:
+        if not os.path.exists(config_path):
+            raise RuntimeError(f'用户指定配置文件{config_path} 不存在!')
     else:
-        defalt_config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-        check_or_gen_def_config(defalt_config_path)
-        config_path = defalt_config_path
+        check_or_gen_def_config(IP_CHECK_CONFIG_PATH)
+        config_path = IP_CHECK_CONFIG_PATH
     print('当前配置文件为:', config_path)
     Config.CONFIG_PATH = config_path
     config = Config()
@@ -292,16 +291,14 @@ def main():
 
 def config_edit():
     StateMachine().work_mode = WorkMode.IP_CHECK_CFG
-    def_config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
     parser = argparse.ArgumentParser(description='ip-check 参数配置向导')
-    parser.add_argument("-o", "--output", type=str, default=def_config_path, help="参数配置文件路径")
+    parser.add_argument("-o", "--output", type=str, default=IP_CHECK_CONFIG_PATH, help="参数配置文件路径")
     parser.add_argument("-e", "--example", action="store_true", default=False, help="显示配置文件示例")
     args = parser.parse_args()
     config_path = args.output
     check_or_gen_def_config(config_path)
     if args.example:
-        from ipcheck import IP_CHECK_DEFAULT_CONFIG
-        print(IP_CHECK_DEFAULT_CONFIG)
+        print_file_content(IP_CHECK_DEF_CONFIG_PATH)
         return
     print('编辑配置文件 {}'.format(config_path))
     platform = sys.platform

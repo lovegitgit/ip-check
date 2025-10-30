@@ -18,6 +18,11 @@ setup(
     author_email="xiaoleigs@gmail.com",
     keywords=["cdn", "speed test", "network speed"],
     packages=find_packages(include=['ipcheck', 'ipcheck.app', 'ipcheck.app.*']),
+    include_package_data=True,
+    package_data={
+        'ipcheck': ['config-ex.ini'],
+        'ipcheck': ['geo-ex.ini'],
+    },
     entry_points={
         'console_scripts': [
             'ip-check = ipcheck.main:main',
