@@ -12,7 +12,7 @@ from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, WorkMode
 from ipcheck.app.config import Config
 from ipcheck.app.geo_utils import get_geo_info
 from ipcheck.app.statemachine import StateMachine
-from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address, get_current_ts, floyd_sample
+from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address, get_perfcounter, floyd_sample
 from ipcheck.app.ip_info import IpInfo
 
 
@@ -62,7 +62,7 @@ class IpParser:
 
     def parse(self):
         ip_set = set()
-        t1 = get_current_ts()
+        t1 = get_perfcounter()
         host_name_args = set()
         # 先用ip 表达式解析
         for arg in self.args:
@@ -78,11 +78,11 @@ class IpParser:
                 for result in results:
                     if result:
                         ip_set.update(result)
-        t2 = get_current_ts()
+        t2 = get_perfcounter()
         if StateMachine().work_mode == WorkMode.IP_CHECK:
             print('解析ip 耗时: {}秒'.format(round(t2 - t1, 2)))
         ip_set = get_geo_info(ip_set)
-        t3 = get_current_ts()
+        t3 = get_perfcounter()
         if StateMachine().work_mode == WorkMode.IP_CHECK:
             print('获取geo 信息耗时: {}秒'.format(round(t3 - t2, 2)))
         if StateMachine().work_mode == WorkMode.IGEO_INFO:
@@ -94,7 +94,7 @@ class IpParser:
         if self.config.ro_prefer_locs:
             ip_set = filter_ip_list_by_locs(ip_set, self.config.ro_prefer_locs)
         ip_list = list(ip_set)
-        t4 = get_current_ts()
+        t4 = get_perfcounter()
         if StateMachine().work_mode == WorkMode.IP_CHECK:
             print('预处理ip 总计耗时: {}秒'.format(round(t4 - t1, 2)))
         return ip_list

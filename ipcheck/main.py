@@ -15,7 +15,7 @@ from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
 from typing import Iterable
-from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, parse_url, is_hostname, get_current_ts, UniqueListAction, copy_file, print_file_content
+from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, parse_url, is_hostname, get_perfcounter, UniqueListAction, copy_file, print_file_content
 
 def print_cache():
     if StateMachine().user_inject:
@@ -24,7 +24,7 @@ def print_cache():
 # 注册全局退出监听
 def signal_handler(sig, frame):
     state_machine = StateMachine()
-    cur_ts = get_current_ts()
+    cur_ts = get_perfcounter()
     ts_diff = cur_ts - state_machine.last_user_inject_ts
     state_machine.last_user_inject_ts = cur_ts
     if ts_diff < 3.3:

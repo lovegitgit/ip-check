@@ -232,9 +232,6 @@ def get_json_from_net(url: str, proxy=None):
         pass
     return res
 
-def get_current_ts() -> float:
-    return time.time()
-
 def get_perfcounter() -> float:
     return time.perf_counter()
 
