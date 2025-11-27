@@ -161,13 +161,9 @@ def tcpping(
             s.close()
         except:
             pass
-        if count == packets_lost:
-            return ipinfo
         if fast_check:
-            if (packets_lost / count) * 100 > max_loss or (sum(rtts) * 1000 / (count - packets_lost)) > max_rtt:
+            if (packets_lost / count) * 100 > max_loss or sum(rtts) * 1000 > (count - packets_lost) * max_rtt:
                 return ipinfo
-        if statemachine.ipcheck_stage != IpcheckStage.RTT_TEST:
-            return ipinfo
     if packets_sent == 0:
         return ipinfo
     ipinfo.rtt = round(sum(rtts) * 1000 / packets_sent, 2)
