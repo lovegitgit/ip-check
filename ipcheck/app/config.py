@@ -70,6 +70,8 @@ class Config(CommonConfig):
         self.vt_user_agent = False
         # 可用性检测路径, 固定的, 取决于cloudflare
         self.vt_path = '/cdn-cgi/trace'
+        # 可用性文件检测url
+        self.vt_file_url = ''
         # 可用性测试多线程数量
         self.vt_thread_num = 64
         # 可用性测试时的网络请求重试次数
@@ -152,7 +154,7 @@ class Config(CommonConfig):
                     continue
                 original_value = variables.get(key)
                 type_expr = None
-                if original_value:
+                if original_value or original_value == '':
                     type_of_original_value = type(original_value)
                     if type_of_original_value == str:
                         type_expr = 'str'

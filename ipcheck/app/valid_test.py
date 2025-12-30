@@ -5,7 +5,7 @@ from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.statemachine import StateMachine
 from ipcheck.app.valid_test_config import ValidTestConfig
-from ipcheck.app.utils import adjust_list_by_size, show_freshable_content
+from ipcheck.app.utils import adjust_list_by_size, show_freshable_content, parse_url
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import urllib3
 from ipcheck.app.ip_info import IpInfo
@@ -92,7 +92,39 @@ class ValidTest:
                         res = ip_info
                 elif r.status == 200:
                     res = ip_info
+            pool.close()
+
+            # 二次验证: 检查大文件Content-Length
+            if res and self.config.file_url:
+                file_host, file_path = parse_url(self.config.file_url)
+                file_headers = {'Host': file_host}
+                if self.config.user_agent:
+                    file_headers.update({'User-Agent': random.choice(USER_AGENTS)})
+
+                # 创建独立的连接池以确保 SNI 正确
+                file_pool = urllib3.HTTPSConnectionPool(
+                    ip_info.ip,
+                    assert_hostname=file_host,
+                    server_hostname=file_host,
+                    port=ip_info.port,
+                    cert_reqs='CERT_NONE')
+
+                with file_pool.urlopen('GET', file_path,
+                                  headers=file_headers,
+                                  assert_same_host=False,
+                                  timeout=self.config.timeout,
+                                  retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor, respect_retry_after_header=False),
+                                  preload_content=False,
+                                  redirect=True) as fr:
+                    if fr.status == 200:
+                        cl = fr.headers.get('Content-Length', 0)
+                        if not cl or int(cl) <= 0:
+                            res = None
+                    else:
+                        res = None
+                file_pool.close()
         except Exception as e:
+            res = None
             if self.config.print_err:
                 print(f'valid test for {ip_info.simple_info} encounters err {e}')
         return res
