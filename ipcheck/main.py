@@ -209,6 +209,7 @@ def load_config():
         config.vt_host_name = host_name
         config.vt_path = path
         config.st_url = args.url
+        config.vt_file_url = args.url
     if not is_hostname(config.vt_host_name):
         raise ValueError('可用性测试域名不合法, 请检查参数!')
     return config
