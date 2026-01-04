@@ -101,24 +101,24 @@ def parse_geo_config():
     db_api_url = get_option_safely('common', 'db_api_url')
     return db_asn_url, db_city_url, proxy, db_api_url
 
-def check_geo_version(api_url: str, proxy=None):
-    def get_old_version():
-        old_version = {}
+def check_geo_version(api_url: str, proxy=None, verbose=True):
+    def get_local_version():
+        local_version = {}
         if os.path.exists(GEO_VERSION_PATH) and os.path.isfile(GEO_VERSION_PATH):
             try:
                 with open(GEO_VERSION_PATH, encoding='utf-8') as f:
-                    old_version = json.load(f)
+                    local_version = json.load(f)
             except:
                 pass
-        return old_version
+        return local_version
 
-    def get_current_version():
-        return get_json_from_net(api_url, proxy)
+    def get_remote_version():
+        return get_json_from_net(api_url, proxy, verbose)
 
-    old_version = get_old_version()
-    current_version = get_current_version()
-    has_update = old_version.get('tag_name', 'old_tag') != current_version.get('tag_name', 'new_tag')
-    return has_update, current_version
+    local_version = get_local_version()
+    remote_version = get_remote_version()
+    has_update = local_version.get('tag_name', 'old_tag') != remote_version.get('tag_name', 'new_tag')
+    return has_update, remote_version, local_version
 
 
 def save_version(version: json):

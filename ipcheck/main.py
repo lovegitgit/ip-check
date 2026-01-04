@@ -5,6 +5,7 @@ import os
 import sys
 import subprocess
 import signal
+import threading
 from ipcheck import WorkMode, IpcheckStage, __version__, IP_CHECK_DEF_CONFIG_PATH, IP_CHECK_CONFIG_PATH
 from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
@@ -14,8 +15,12 @@ from ipcheck.app.statemachine import StateMachine
 from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
+from ipcheck.app.geo_utils import parse_geo_config, check_geo_version
 from typing import Iterable
 from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, parse_url, is_hostname, get_perfcounter, UniqueListAction, copy_file, print_file_content
+
+# msg to notify user about geo db update
+update_message = None
 
 def print_cache():
     if StateMachine().user_inject:
@@ -232,7 +237,21 @@ def write_better_ips_to_file(ips: Iterable[IpInfo], path):
     print('测试通过%d个优选ip 已导出到' % len(ips), path)
 
 
-def main():
+def check_geo_update():
+    global update_message
+    try:
+        _, _, proxy, db_api_url = parse_geo_config()
+        if db_api_url:
+            has_update, remote_version, local_version = check_geo_version(db_api_url, proxy, verbose=False)
+            if has_update and remote_version:
+                remote_tag = remote_version.get('tag_name', 'unknown')
+                local_tag = local_version.get('tag_name', 'unknown')
+                update_message = f"\n[notice] A new release of geo database is available: {local_tag} -> {remote_tag}\n[notice] To update, run: igeo-dl"
+    except Exception:
+        pass
+
+
+def run_ip_check():
     StateMachine().work_mode = WorkMode.IP_CHECK
     config = load_config()
     ip_list = gen_ip_list()
@@ -288,6 +307,13 @@ def main():
     else:
         print('下载测试没有获取到可用ip, 测试停止!')
         return
+
+
+def main():
+    threading.Thread(target=check_geo_update, daemon=True).start()
+    run_ip_check()
+    if update_message:
+        print(update_message)
 
 
 def config_edit():

@@ -134,10 +134,17 @@ def self_update(proxy=None):
     check_or_gen_def_config()
     db_asn_url, db_city_url, cfg_proxy, db_api_url = parse_geo_config()
     proxy = proxy if proxy else cfg_proxy
-    has_update, current_version = check_geo_version(db_api_url, proxy)
+    has_update, remote_version, local_version = check_geo_version(db_api_url, proxy)
     allow_update = False
-    prompt_str = '检测到GEO数据库有更新, 是否更新: Y(es)/N(o)\n' if has_update else 'GEO数据库已最新, 是否重新下载GEO数据库: Y(es)/N(o)\n'
-    if not current_version:
+
+    if has_update:
+        local_tag = local_version.get('tag_name', 'unknown')
+        remote_tag = remote_version.get('tag_name', 'unknown')
+        prompt_str = f'检测到GEO数据库有更新: {local_tag} -> {remote_tag}, 是否更新: Y(es)/N(o)\n'
+    else:
+        prompt_str = 'GEO数据库已最新, 是否重新下载GEO数据库: Y(es)/N(o)\n'
+
+    if not remote_version:
         prompt_str = '检测GEO数据库更新失败, 是否强制下载GEO数据库: Y(es)/N(o)\n'
     while True:
         answer = input(prompt_str)
@@ -155,7 +162,7 @@ def self_update(proxy=None):
         print('CITY 数据库下载地址:', db_city_url)
         res_city = download_geo_db(db_city_url, GEO2CITY_DB_PATH, proxy)
         if res_asn and res_city:
-            save_version(current_version)
+            save_version(remote_version)
 
 
 if __name__ == '__main__':

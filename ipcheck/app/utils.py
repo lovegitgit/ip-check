@@ -214,9 +214,10 @@ def download_file(url, path, proxy):
     except Exception:
         return False
 
-def get_json_from_net(url: str, proxy=None):
+def get_json_from_net(url: str, proxy=None, verbose=True):
     res = {}
-    print('请求代理为: {}'.format(proxy))
+    if verbose:
+        print('请求代理为: {}'.format(proxy))
     proxies = {}
     if proxy:
         proxies = {
