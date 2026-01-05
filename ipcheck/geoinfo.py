@@ -9,8 +9,19 @@ import argparse
 import subprocess
 import sys
 from ipcheck.app.utils import UniqueListAction, print_file_content
-
 from ipcheck.app.statemachine import StateMachine
+
+
+def ask_confirm(prompt_str):
+    while True:
+        answer = input(prompt_str)
+        if answer.upper() in ['Y', 'YES']:
+            return True
+        elif answer.upper() in ['N', 'NO']:
+            return False
+        else:
+            print('输入有误, 请重新输入!')
+
 
 def get_info():
     StateMachine().work_mode = WorkMode.IGEO_INFO
@@ -95,11 +106,13 @@ def download_db():
     parser = argparse.ArgumentParser(description='igeo-dl 升级/下载geo 数据库')
     parser.add_argument("-u", "--url", type=str, default=None, help="geo 数据库下载地址, 要求结尾包含GeoLite2-City.mmdb 或GeoLite2-ASN.mmdb")
     parser.add_argument("-p", "--proxy", type=str, default=None, help="下载时使用的代理")
+    parser.add_argument("-y", "--yes", action="store_true", default=False, help="自动确认更新并下载 GEO 数据库")
     args = parser.parse_args()
     url = args.url
     proxy = args.proxy
+    auto_confirm = args.yes
     if not args.url:
-        return self_update(proxy)
+        return self_update(proxy, auto_confirm)
     path = None
     if url.endswith(GEO2CITY_DB_NAME):
         path = GEO2CITY_DB_PATH
@@ -130,39 +143,49 @@ def config_edit():
         print('未知的操作系统, 请尝试手动修改{}!'.format(GEO_CONFIG_PATH))
 
 
-def self_update(proxy=None):
+def self_update(proxy=None, auto_confirm=False):
     check_or_gen_def_config()
     db_asn_url, db_city_url, cfg_proxy, db_api_url = parse_geo_config()
     proxy = proxy if proxy else cfg_proxy
     has_update, remote_version, local_version = check_geo_version(db_api_url, proxy)
+    local_tag = local_version.get('tag_name', 'unknown')
+    remote_tag = remote_version.get('tag_name', 'unknown')
     allow_update = False
 
-    if has_update:
-        local_tag = local_version.get('tag_name', 'unknown')
-        remote_tag = remote_version.get('tag_name', 'unknown')
-        prompt_str = f'检测到GEO数据库有更新: {local_tag} -> {remote_tag}, 是否更新: Y(es)/N(o)\n'
-    else:
-        prompt_str = 'GEO数据库已最新, 是否重新下载GEO数据库: Y(es)/N(o)\n'
-
+    # remote_version 检查失败，直接提示并退出
     if not remote_version:
         prompt_str = '检测GEO数据库更新失败, 是否强制下载GEO数据库: Y(es)/N(o)\n'
-    while True:
-        answer = input(prompt_str)
-        if answer.upper() in ['Y', 'YES']:
+        allow_update = ask_confirm(prompt_str)
+        if not allow_update:
+            return
+    # 有更新，auto_confirm 时自动下载，否则询问
+    elif has_update:
+        if auto_confirm:
+            print(f'检测到GEO数据库有更新: {local_tag} -> {remote_tag}, 自动更新下载中... ...')
             allow_update = True
-            break
-        elif answer.upper() in ['N', 'NO']:
-            allow_update = False
-            break
         else:
-            print('输入有误, 请重新输入!')
-    if allow_update:
-        print('ASN 数据库下载地址:', db_asn_url)
-        res_asn = download_geo_db(db_asn_url, GEO2ASN_DB_PATH, proxy)
-        print('CITY 数据库下载地址:', db_city_url)
-        res_city = download_geo_db(db_city_url, GEO2CITY_DB_PATH, proxy)
-        if res_asn and res_city:
-            save_version(remote_version)
+            prompt_str = f'检测到GEO数据库有更新: {local_tag} -> {remote_tag}, 是否更新: Y(es)/N(o)\n'
+            allow_update = ask_confirm(prompt_str)
+        if not allow_update:
+            return
+
+    # 无更新，允许用户选择是否强制重新下载
+    else:
+        prompt_str = f'GEO数据库已最新: {remote_tag}, 是否强制重新下载GEO数据库: Y(es)/N(o)\n'
+        if auto_confirm:
+            print(f'检测到GEO数据库为最新: {remote_tag}, 无需更新!')
+            return
+        allow_update = ask_confirm(prompt_str)
+        if not allow_update:
+            return
+
+    # 执行更新
+    print('ASN 数据库下载地址:', db_asn_url)
+    res_asn = download_geo_db(db_asn_url, GEO2ASN_DB_PATH, proxy)
+    print('CITY 数据库下载地址:', db_city_url)
+    res_city = download_geo_db(db_city_url, GEO2CITY_DB_PATH, proxy)
+    if res_asn and res_city:
+        save_version(remote_version)
 
 
 if __name__ == '__main__':
