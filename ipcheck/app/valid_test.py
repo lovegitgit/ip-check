@@ -3,10 +3,10 @@
 
 from typing import Iterable
 from ipcheck import IpcheckStage
-from ipcheck.app.statemachine import StateMachine
+from ipcheck.app.statemachine import state_machine
 from ipcheck.app.valid_test_config import ValidTestConfig
 from ipcheck.app.utils import adjust_list_by_size, show_freshable_content, parse_url
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import urllib3
 from ipcheck.app.ip_info import IpInfo
 urllib3.disable_warnings()
@@ -25,9 +25,9 @@ class ValidTest:
         if not self.config.enabled:
             print('跳过可用性测试')
             return self.ip_list
-        StateMachine().ipcheck_stage = IpcheckStage.VALID_TEST
-        StateMachine().user_inject = False
-        StateMachine.clear()
+        state_machine.ipcheck_stage = IpcheckStage.VALID_TEST
+        state_machine.stop_event.clear()
+        state_machine.clear()
         print('准备测试可用性 ... ...')
         if len(self.ip_list) > self.config.ip_limit_count:
             print('待测试ip 过多, 当前最大限制数量为{} 个, 压缩中... ...'.format(self.config.ip_limit_count))
@@ -43,21 +43,35 @@ class ValidTest:
             self.__test, ip_info) for ip_info in self.ip_list]
         test_count = 0
         pass_count = 0
-        for future in as_completed(all_task):
-            test_count += 1
-            ret = future.result()
-            if ret:
-                pass_count += 1
-                passed_ips.append(ret)
-                StateMachine.cache(ret)
-            content = '  当前进度为: {}/{}, {} pass'.format(test_count, total_count, pass_count)
-            show_freshable_content(content)
+
+        not_done_futures = set(all_task)
+        while not_done_futures:
+            if state_machine.ipcheck_stage != IpcheckStage.VALID_TEST:
+                for f in not_done_futures:
+                    f.cancel()
+                thread_pool_executor.shutdown(wait=False)
+                return passed_ips  # 立即返回，不继续后续逻辑
+
+            done, not_done_futures = wait(not_done_futures, return_when=FIRST_COMPLETED, timeout=0.5)
+            for future in done:
+                test_count += 1
+                try:
+                    ret = future.result()
+                    if ret:
+                        pass_count += 1
+                        passed_ips.append(ret)
+                        state_machine.cache(ret)
+                except Exception:
+                    pass
+                content = '  当前进度为: {}/{}, {} pass'.format(test_count, total_count, pass_count)
+                show_freshable_content(content)
+
         thread_pool_executor.shutdown(wait=True)
         print('可用性结果为: 总数{}, {} pass'.format(len(self.ip_list), len(passed_ips)))
         return passed_ips
 
     def __test(self, ip_info) -> None:
-        if StateMachine().ipcheck_stage != IpcheckStage.VALID_TEST:
+        if state_machine.ipcheck_stage != IpcheckStage.VALID_TEST:
             return None
         check_key = self.config.check_key
         pool = urllib3.HTTPSConnectionPool(
@@ -78,6 +92,8 @@ class ValidTest:
                                                timeout=self.config.timeout,
                                                preload_content=False,
                                                redirect=True) as r:
+                if state_machine.ipcheck_stage != IpcheckStage.VALID_TEST:
+                    return None
                 if '/cdn-cgi/trace' == self.config.path:
                     req_dict = {}
                     for line in r.readlines():
@@ -96,6 +112,8 @@ class ValidTest:
 
             # 二次验证: 检查大文件Content-Length
             if res and self.config.file_url:
+                if state_machine.ipcheck_stage != IpcheckStage.VALID_TEST:
+                    return None
                 file_host, file_path = parse_url(self.config.file_url)
                 file_headers = {'Host': file_host}
                 if self.config.user_agent:
@@ -116,6 +134,8 @@ class ValidTest:
                                   retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor, respect_retry_after_header=False),
                                   preload_content=False,
                                   redirect=True) as fr:
+                    if state_machine.ipcheck_stage != IpcheckStage.VALID_TEST:
+                        return None
                     if fr.status == 200:
                         cl = fr.headers.get('Content-Length', 0)
                         if not cl or int(cl) <= 0:

@@ -6,7 +6,7 @@ import os
 import geoip2.database
 from typing import Iterable
 from ipcheck.app.ip_info import IpInfo
-from ipcheck.app.statemachine import StateMachine
+from ipcheck.app.statemachine import state_machine
 from ipcheck.app.utils import download_file, copy_file, get_json_from_net
 import json
 
@@ -31,9 +31,11 @@ def get_geo_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
     def get_loc_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
         try:
             with geoip2.database.Reader(GEO2CITY_DB_PATH) as reader1:
-                StateMachine().geo_loc_avaiable = True
+                state_machine.geo_loc_avaiable = True
                 res = []
                 for ipinfo in infos:
+                    if state_machine.stop_event.is_set():
+                        break
                     ip = ipinfo.ip
                     country, city = 'None', 'None'
                     try:
@@ -48,16 +50,18 @@ def get_geo_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
                     res.append(ipinfo)
                 return res
         except:
-            StateMachine().geo_loc_avaiable = False
+            state_machine.geo_loc_avaiable = False
             print('{} 数据库异常, 无法获取IP 归属地信息, 请执行igeo-dl 重新下载!'.format(GEO2CITY_DB_NAME))
             return infos
 
     def get_asn_org_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
         try:
             with geoip2.database.Reader(GEO2ASN_DB_PATH) as reader2:
-                StateMachine().geo_asn_org_avaiable = True
+                state_machine.geo_asn_org_avaiable = True
                 res = []
                 for ipinfo in infos:
+                    if state_machine.stop_event.is_set():
+                        break
                     ip = ipinfo.ip
                     org, asn, network = 'None', 'None', 'None'
                     try:
@@ -73,7 +77,7 @@ def get_geo_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
                     res.append(ipinfo)
                 return res
         except:
-            StateMachine().geo_asn_org_avaiable = False
+            state_machine.geo_asn_org_avaiable = False
             print('{} 数据库异常, 无法获取IP ASN/ORG信息, 请执行igeo-dl 重新下载!'.format(GEO2ASN_DB_NAME))
             return infos
 

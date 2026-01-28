@@ -8,9 +8,9 @@ from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.rtt_test_config import RttTestConfig
 from ipcheck.app.ip_info import IpInfo
-from ipcheck.app.statemachine import StateMachine
+from ipcheck.app.statemachine import state_machine
 from ipcheck.app.utils import adjust_list_by_size, get_perfcounter, show_freshable_content, get_family_addr, sleep_secs
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 
 
 class RttTest:
@@ -23,9 +23,9 @@ class RttTest:
         if not self.config.enabled:
             print('跳过RTT测试')
             return self.ip_list
-        StateMachine().ipcheck_stage = IpcheckStage.RTT_TEST
-        StateMachine().user_inject = False
-        StateMachine.clear()
+        state_machine.ipcheck_stage = IpcheckStage.RTT_TEST
+        state_machine.stop_event.clear()
+        state_machine.clear()
         print('准备测试rtt ... ...')
         print('rtt ping 间隔为: {}秒'.format(self.config.interval))
         if len(self.ip_list) > self.config.ip_limit_count:
@@ -38,23 +38,37 @@ class RttTest:
         passed_ips = []
         thread_pool_executor = ThreadPoolExecutor(max_workers=self.config.thread_num, thread_name_prefix="valid_")
         all_task = [thread_pool_executor.submit(self.__test, ip_info) for ip_info in self.ip_list]
-        for future in as_completed(all_task):
-            ip_info: IpInfo = future.result()
-            test_count += 1
-            if ip_info.rtt != -1:
-                StateMachine.cache(ip_info)
-                print(ip_info.get_rtt_info())
-                if ip_info.rtt <= self.config.max_rtt and ip_info.loss <= self.config.max_loss:
-                    passed_ips.append(ip_info)
-                    pass_count += 1
-            content = '  当前进度为: {}/{}, {} pass'.format(test_count, total_count, pass_count)
-            show_freshable_content(content)
+
+        not_done_futures = set(all_task)
+        while not_done_futures:
+            if state_machine.ipcheck_stage != IpcheckStage.RTT_TEST:
+                for f in not_done_futures:
+                    f.cancel()
+                thread_pool_executor.shutdown(wait=False)
+                return passed_ips  # 立即返回
+
+            done, not_done_futures = wait(not_done_futures, return_when=FIRST_COMPLETED, timeout=0.5)
+            for future in done:
+                try:
+                    ip_info: IpInfo = future.result()
+                    test_count += 1
+                    if ip_info.rtt != -1:
+                        state_machine.cache(ip_info)
+                        print(ip_info.get_rtt_info())
+                        if ip_info.rtt <= self.config.max_rtt and ip_info.loss <= self.config.max_loss:
+                            passed_ips.append(ip_info)
+                            pass_count += 1
+                except Exception:
+                    pass
+                content = '  当前进度为: {}/{}, {} pass'.format(test_count, total_count, pass_count)
+                show_freshable_content(content)
+
         thread_pool_executor.shutdown(wait=True)
         print('rtt 结果为: 总数{}, {} pass'.format(total_count, pass_count))
         return passed_ips
 
     def __test(self, ip_info: IpInfo) -> IpInfo:
-        if StateMachine().ipcheck_stage != IpcheckStage.RTT_TEST:
+        if state_machine.ipcheck_stage != IpcheckStage.RTT_TEST:
             return ip_info
         return tcpping(ip_info,
                         count=self.config.test_count,
@@ -75,7 +89,6 @@ async def async_tcpping(
     fast_check: bool = False,
     print_err: bool = False
 ):
-    statemachine = StateMachine()
     rtts = []
     packets_sent = 0
     packets_lost = 0
@@ -88,7 +101,7 @@ async def async_tcpping(
 
     loop = asyncio.get_running_loop()
     for i in range(count):
-        if statemachine.ipcheck_stage != IpcheckStage.RTT_TEST:
+        if state_machine.ipcheck_stage != IpcheckStage.RTT_TEST:
             return ipinfo
         if i > 0:
             await asyncio.sleep(interval)
@@ -109,7 +122,7 @@ async def async_tcpping(
         if fast_check:
             if (packets_lost / count) * 100 > max_loss or (sum(rtts) * 1000 / (count - packets_lost)) > max_rtt:
                 return ipinfo
-        if statemachine.ipcheck_stage != IpcheckStage.RTT_TEST:
+        if state_machine.ipcheck_stage != IpcheckStage.RTT_TEST:
             return ipinfo
     if packets_sent == 0:
         return ipinfo
@@ -127,7 +140,6 @@ def tcpping(
     fast_check: bool = False,
     print_err: bool = False
 ):
-    statemachine = StateMachine()
     rtts = []
     packets_sent = 0
     packets_lost = 0
@@ -139,10 +151,11 @@ def tcpping(
         return ipinfo
 
     for i in range(count):
-        if statemachine.ipcheck_stage != IpcheckStage.RTT_TEST:
+        if state_machine.ipcheck_stage != IpcheckStage.RTT_TEST:
             return ipinfo
         if i > 0:
-            sleep_secs(interval)
+            if state_machine.stop_event.wait(interval):
+                return ipinfo
         s = socket.socket(family=family, type=socket.SOCK_STREAM)
         s.setblocking(False)
         s.settimeout(timeout)

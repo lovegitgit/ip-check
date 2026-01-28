@@ -4,7 +4,7 @@
 from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.speed_test_config import SpeedTestConfig
-from ipcheck.app.statemachine import StateMachine
+from ipcheck.app.statemachine import state_machine
 from ipcheck.app.utils import adjust_list_by_size, show_freshable_content, parse_url, get_perfcounter, sleep_secs
 import threading
 import urllib3
@@ -26,9 +26,9 @@ class SpeedTest:
         if not self.config.enabled:
             print('跳过速度测试')
             return self.ip_list
-        StateMachine().ipcheck_stage = IpcheckStage.SPEED_TEST
-        StateMachine().user_inject = False
-        StateMachine.clear()
+        state_machine.ipcheck_stage = IpcheckStage.SPEED_TEST
+        state_machine.stop_event.clear()
+        state_machine.clear()
         print('准备测试下载速度 ... ...')
         print('是否使用user-agent: {}'.format(self.config.user_agent))
         if len(self.ip_list) > self.config.ip_limit_count:
@@ -38,7 +38,7 @@ class SpeedTest:
         total_num = len(self.ip_list)
         passed_ips = []
         for i in range(total_num):
-            if StateMachine().ipcheck_stage != IpcheckStage.SPEED_TEST:
+            if state_machine.ipcheck_stage != IpcheckStage.SPEED_TEST:
                 break
             test_ip_info = self.ip_list[i]
             print('正在测速第{}/{}个ip: {}:{} {}_{} rtt {} ms'.format(i + 1,
@@ -49,7 +49,7 @@ class SpeedTest:
                                                              test_ip_info.colo,
                                                              test_ip_info.rtt))
             test_ip_info = self.__test(test_ip_info)
-            StateMachine.cache(test_ip_info)
+            state_machine.cache(test_ip_info)
             print(test_ip_info.get_info())
             if test_ip_info.max_speed >= self.config.download_speed and test_ip_info.avg_speed >= self.config.avg_download_speed:
                 passed_ips.append(test_ip_info)
@@ -98,7 +98,7 @@ class SpeedTest:
             except Exception as e:
                 has_error = True
                 if self.config.print_err:
-                    print(f'spped test for {ip_info.simple_info} encounters error {e}')
+                    print(f'speed test for {ip_info.simple_info} encounters error {e}')
             download_exit = True
 
         def cal_speed():
@@ -107,11 +107,13 @@ class SpeedTest:
             start = original_start
             old_size = size
             while not download_exit:
-                if StateMachine().ipcheck_stage != IpcheckStage.SPEED_TEST:
+                if state_machine.ipcheck_stage != IpcheckStage.SPEED_TEST:
                     stop_signal = True
                     ip_info.st_test_tag = '*'
                     break
-                sleep_secs(0.1)
+                if state_machine.stop_event.wait(0.1):
+                    stop_signal = True
+                    break
                 end = get_perfcounter()
                 if end - start > 0.9:
                     cur_size = size
@@ -144,11 +146,15 @@ class SpeedTest:
                     break
 
         t1 = threading.Thread(target=download, daemon=True)
-        t2 = threading.Thread(target=cal_speed)
+        t2 = threading.Thread(target=cal_speed, daemon=True)
         t1.start()
         t2.start()
-        # t1.join()
-        t2.join()
+
+        while t2.is_alive():
+            if state_machine.ipcheck_stage != IpcheckStage.SPEED_TEST:
+                stop_signal = True
+                break
+            t2.join(timeout=0.2)
         if self.config.rm_err_ip and has_error:
             max_speed, avg_speed = 0, 0
         ip_info.max_speed = max_speed

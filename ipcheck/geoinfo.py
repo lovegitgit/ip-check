@@ -8,9 +8,17 @@ from ipcheck.app.geo_utils import check_or_gen_def_config, download_geo_db, pars
 import argparse
 import subprocess
 import sys
+import signal
+import os
 from ipcheck.app.utils import UniqueListAction, print_file_content
-from ipcheck.app.statemachine import StateMachine
+from ipcheck.app.statemachine import state_machine
 
+# 全局退出监听
+def signal_handler(sig, frame):
+    state_machine.stop_event.set()
+    os._exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 def ask_confirm(prompt_str):
     while True:
@@ -24,7 +32,7 @@ def ask_confirm(prompt_str):
 
 
 def get_info():
-    StateMachine().work_mode = WorkMode.IGEO_INFO
+    state_machine.work_mode = WorkMode.IGEO_INFO
     parser = argparse.ArgumentParser(description='geo-info 获取ip(s) 的归属地信息')
     parser.add_argument("sources", action=UniqueListAction, nargs="+", help="待获取归属地信息的ip(s)")
     args = parser.parse_args()
@@ -39,7 +47,7 @@ def get_info():
 
 
 def filter_ips():
-    StateMachine().work_mode = WorkMode.IP_FILTER
+    state_machine.work_mode = WorkMode.IP_FILTER
     parser = argparse.ArgumentParser(description='ip-filter: ip 筛选工具')
     parser.add_argument("sources", action=UniqueListAction, nargs="+", help="待筛选的ip(s)")
     parser.add_argument("-w", "--white_list", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好ip参数, 格式为: expr1 expr2, 如8 9 会筛选8和9开头的ip')
@@ -102,7 +110,7 @@ def filter_ips():
 
 
 def download_db():
-    StateMachine().work_mode = WorkMode.IGEO_DL
+    state_machine.work_mode = WorkMode.IGEO_DL
     parser = argparse.ArgumentParser(description='igeo-dl 升级/下载geo 数据库')
     parser.add_argument("-u", "--url", type=str, default=None, help="geo 数据库下载地址, 要求结尾包含GeoLite2-City.mmdb 或GeoLite2-ASN.mmdb")
     parser.add_argument("-p", "--proxy", type=str, default=None, help="下载时使用的代理")
@@ -125,7 +133,7 @@ def download_db():
 
 
 def config_edit():
-    StateMachine().work_mode = WorkMode.IGEO_CFG
+    state_machine.work_mode = WorkMode.IGEO_CFG
     parser = argparse.ArgumentParser(description='geo-cfg 编辑geo config')
     parser.add_argument("-e", "--example", action="store_true", default=False, help="显示配置文件示例")
     args = parser.parse_args()

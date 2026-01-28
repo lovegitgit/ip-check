@@ -11,17 +11,19 @@ from typing import Iterable
 from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, WorkMode
 from ipcheck.app.config import Config
 from ipcheck.app.geo_utils import get_geo_info
-from ipcheck.app.statemachine import StateMachine
+from ipcheck.app.statemachine import state_machine
 from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address, get_perfcounter, floyd_sample
 from ipcheck.app.ip_info import IpInfo
 
 
 def filter_ip_list_by_locs(ip_list: Iterable[IpInfo], prefer_locs: Iterable[str]):
-    if not StateMachine().geo_loc_avaiable:
+    if not state_machine.geo_loc_avaiable:
         print('{} 数据库不可用, 跳过地区过滤... ...'.format(GEO2CITY_DB_NAME))
         return ip_list
     fixed_list = []
     for ip_info in ip_list:
+        if state_machine.stop_event.is_set():
+            break
         for loc in prefer_locs:
             if loc.upper().replace('_', '').replace(' ', '') in ip_info.country_city.upper().replace('_', ''):
                 fixed_list.append(ip_info)
@@ -29,11 +31,13 @@ def filter_ip_list_by_locs(ip_list: Iterable[IpInfo], prefer_locs: Iterable[str]
     return fixed_list
 
 def filter_ip_list_by_orgs(ip_list: Iterable[IpInfo], prefer_orgs: Iterable[str]):
-    if not StateMachine().geo_asn_org_avaiable:
+    if not state_machine.geo_asn_org_avaiable:
         print('{} 数据库不可用, 跳过org 过滤... ...'.format(GEO2ASN_DB_NAME))
         return ip_list
     fixed_list = []
     for ip_info in ip_list:
+        if state_machine.stop_event.is_set():
+            break
         for org in prefer_orgs:
             if org.upper().replace(' ', '').replace('-', '') in ip_info.org.upper().replace(' ', '').replace('-', ''):
                 fixed_list.append(ip_info)
@@ -41,11 +45,13 @@ def filter_ip_list_by_orgs(ip_list: Iterable[IpInfo], prefer_orgs: Iterable[str]
     return fixed_list
 
 def filter_ip_list_by_block_orgs(ip_list: Iterable[IpInfo], block_orgs: Iterable[str]):
-    if not StateMachine().geo_asn_org_avaiable:
+    if not state_machine.geo_asn_org_avaiable:
         print('{} 数据库不可用, 跳过org过滤... ...'.format(GEO2ASN_DB_NAME))
         return ip_list
     fixed_list = []
     for ip_info in ip_list:
+        if state_machine.stop_event.is_set():
+            break
         is_valid = True
         for org in block_orgs:
             if org.upper().replace(' ', '').replace('-', '') in ip_info.org.upper().replace(' ', '').replace('-', ''):
@@ -66,6 +72,8 @@ class IpParser:
         host_name_args = set()
         # 先用ip 表达式解析
         for arg in self.args:
+            if state_machine.stop_event.is_set():
+                break
             ips = parse_ip_by_ip_expr(arg, self.config)
             if ips:
                 ip_set.update(ips)
@@ -79,13 +87,13 @@ class IpParser:
                     if result:
                         ip_set.update(result)
         t2 = get_perfcounter()
-        if StateMachine().work_mode == WorkMode.IP_CHECK:
+        if state_machine.work_mode == WorkMode.IP_CHECK:
             print('解析ip 耗时: {}秒'.format(round(t2 - t1, 2)))
         ip_set = get_geo_info(ip_set)
         t3 = get_perfcounter()
-        if StateMachine().work_mode == WorkMode.IP_CHECK:
+        if state_machine.work_mode == WorkMode.IP_CHECK:
             print('获取geo 信息耗时: {}秒'.format(round(t3 - t2, 2)))
-        if StateMachine().work_mode == WorkMode.IGEO_INFO:
+        if state_machine.work_mode == WorkMode.IGEO_INFO:
             return ip_set
         if self.config.ro_prefer_orgs:
             ip_set = filter_ip_list_by_orgs(ip_set, self.config.ro_prefer_orgs)
@@ -95,7 +103,7 @@ class IpParser:
             ip_set = filter_ip_list_by_locs(ip_set, self.config.ro_prefer_locs)
         ip_list = list(ip_set)
         t4 = get_perfcounter()
-        if StateMachine().work_mode == WorkMode.IP_CHECK:
+        if state_machine.work_mode == WorkMode.IP_CHECK:
             print('预处理ip 总计耗时: {}秒'.format(round(t4 - t1, 2)))
         return ip_list
 
@@ -160,7 +168,7 @@ def parse_ip_by_ip_expr(arg: str, config: Config):
             net = ipaddress.ip_network(arg, strict=False)
             num_hosts = net.num_addresses
             # 针对igeo-info 仅返回一个ip
-            if StateMachine().work_mode == WorkMode.IGEO_INFO:
+            if state_machine.work_mode == WorkMode.IGEO_INFO:
                 sample_size = 1
             # 避免cidr 过大导致的运行时间过久
             else:

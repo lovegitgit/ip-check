@@ -5,6 +5,7 @@ from ipcheck.app.utils import singleton
 from ipcheck.app.ip_info import IpInfo
 from ipcheck import WorkMode
 from ipcheck import IpcheckStage
+import threading
 
 # 工具类，存储一些运行时全局数据
 
@@ -21,10 +22,10 @@ class StateMachine:
         self.work_mode = WorkMode.DEFAULT
         # ip-check 所在阶段
         self.ipcheck_stage = IpcheckStage.UNKNOWN
-        # 用户插入时间
-        self.user_inject = False
         # 上次按ctrl C 的时间
         self.last_user_inject_ts = 0
+        # 全局停止信号
+        self.stop_event = threading.Event()
 
     @classmethod
     def clear(cls):
@@ -45,3 +46,6 @@ class StateMachine:
             print('当前测试阶段IP 信息如下:')
             for ip_info in fixed_ip_list:
                 print(ip_info)
+
+# 导出全局单例实例，方便外部直接引用
+state_machine = StateMachine()

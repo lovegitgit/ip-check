@@ -16,6 +16,7 @@ import re
 import socket
 import asyncio
 import time
+import threading
 
 
 class UniqueListAction(argparse.Action):
@@ -206,7 +207,10 @@ def download_file(url, path, proxy):
                 unit_scale=True,
                 unit_divisor=1024,
             ) as bar:
-                for data in response.iter_content(chunk_size=1024):
+                from ipcheck.app.statemachine import state_machine
+                for data in response.iter_content(chunk_size=1024 * 16):
+                    if state_machine.stop_event.is_set():
+                        return False
                     # 写入文件并更新进度条
                     file.write(data)
                     bar.update(len(data))
@@ -215,6 +219,7 @@ def download_file(url, path, proxy):
         return False
 
 def get_json_from_net(url: str, proxy=None, verbose=True):
+    from ipcheck.app.statemachine import state_machine
     res = {}
     if verbose:
         print('请求代理为: {}'.format(proxy))
@@ -224,13 +229,28 @@ def get_json_from_net(url: str, proxy=None, verbose=True):
             'http': proxy,
             'https': proxy
         }
-    session = requests.Session()
-    session.mount('https://', adapter=requests.adapters.HTTPAdapter(max_retries=5))
-    try:
-        with session.get(url, stream=True, timeout=10, proxies=proxies) as r:
-            res = r.json()
-    except:
-        pass
+
+    def fetch_json():
+        nonlocal res
+        session = requests.Session()
+        session.mount('https://', adapter=requests.adapters.HTTPAdapter(max_retries=5))
+        try:
+            with session.get(url, stream=True, timeout=10, proxies=proxies) as r:
+                res = r.json()
+        except:
+            pass
+        finally:
+            session.close()
+
+    thread = threading.Thread(target=fetch_json, daemon=True)
+    thread.start()
+
+    # 在主线程中轮询，允许信号中断
+    while thread.is_alive():
+        if state_machine.stop_event.wait(0.1):
+            return {}
+        thread.join(timeout=0.1)
+
     return res
 
 def get_perfcounter() -> float:

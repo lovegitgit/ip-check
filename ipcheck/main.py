@@ -11,7 +11,7 @@ from ipcheck.app.config import Config
 from ipcheck.app.ip_info import IpInfo
 import argparse
 from ipcheck.app.gen_ip_utils import gen_ip_list
-from ipcheck.app.statemachine import StateMachine
+from ipcheck.app.statemachine import state_machine
 from ipcheck.app.valid_test import ValidTest
 from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
@@ -23,24 +23,23 @@ from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, parse
 update_message = None
 
 def print_cache():
-    if StateMachine().user_inject:
-        StateMachine.print_cache()
+    if state_machine.stop_event.is_set():
+        state_machine.print_cache()
 
 # 注册全局退出监听
 def signal_handler(sig, frame):
-    state_machine = StateMachine()
     cur_ts = get_perfcounter()
     ts_diff = cur_ts - state_machine.last_user_inject_ts
     state_machine.last_user_inject_ts = cur_ts
-    if ts_diff < 3.3:
+    if ts_diff < 1.5:
         os._exit(0)
     if state_machine.work_mode == WorkMode.IP_CHECK:
         if state_machine.ipcheck_stage == IpcheckStage.UNKNOWN:
             os._exit(0)
-        if not state_machine.user_inject:
-            if state_machine.ipcheck_stage > IpcheckStage.UNKNOWN and state_machine.ipcheck_stage < IpcheckStage.TEST_EXIT:
+        if not state_machine.stop_event.is_set():
+            if IpcheckStage.UNKNOWN < state_machine.ipcheck_stage < IpcheckStage.TEST_EXIT:
                 state_machine.ipcheck_stage += 1
-                state_machine.user_inject = True
+                state_machine.stop_event.set()
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -252,7 +251,7 @@ def check_geo_update():
 
 
 def run_ip_check():
-    StateMachine().work_mode = WorkMode.IP_CHECK
+    state_machine.work_mode = WorkMode.IP_CHECK
     config = load_config()
     ip_list = gen_ip_list()
     ip_list_size = len(ip_list)
@@ -261,6 +260,7 @@ def run_ip_check():
         os._exit(0)
     else:
         print('从参数中生成了{} 个待测试ip'.format(ip_list_size))
+
     # 可用性测试
     valid_test_config = config.get_valid_test_config()
     if config.ro_verbose:
@@ -277,14 +277,13 @@ def run_ip_check():
             print('\nrtt 测试配置为:')
             print(rtt_test_config)
         rtt_test = RttTest(passed_ips, rtt_test_config)
-        # [IpInfo]
         passed_ips = rtt_test.run()
         passed_ips = sorted(passed_ips, key=lambda x: x.rtt)
     else:
         print('可用性测试没有获取到可用ip, 测试停止!')
         return
-
     print_cache()
+
     # 测速
     if passed_ips:
         speed_test_config = config.get_speed_test_config()
@@ -296,8 +295,8 @@ def run_ip_check():
     else:
         print('rtt 测试没有获取到可用ip, 测试停止!')
         return
-
     print_cache()
+
     # 对结果进行排序
     if passed_ips:
         passed_ips = sorted(passed_ips, key=lambda x: x.max_speed, reverse=True)
@@ -314,10 +313,11 @@ def main():
     run_ip_check()
     if update_message:
         print(update_message)
+    os._exit(0)
 
 
 def config_edit():
-    StateMachine().work_mode = WorkMode.IP_CHECK_CFG
+    state_machine.work_mode = WorkMode.IP_CHECK_CFG
     parser = argparse.ArgumentParser(description='ip-check 参数配置向导')
     parser.add_argument("-o", "--output", type=str, default=IP_CHECK_CONFIG_PATH, help="参数配置文件路径")
     parser.add_argument("-e", "--example", action="store_true", default=False, help="显示配置文件示例")
