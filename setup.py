@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(
     name='ip-check',
-    version='2.3.5',
+    version='2.3.6',
     description='Powerful cdn network speed test utils.',
     long_description=long_description,
     long_description_content_type='text/markdown',
