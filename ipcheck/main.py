@@ -62,7 +62,7 @@ def load_config():
     parser.add_argument("-lr", "--max_rt_ip_count", type=int, default=0, help="最大用来检测rtt ip数量限制")
     parser.add_argument("-ls", "--max_st_ip_count", type=int, default=0, help="最大用来检测下载(speed) 速度的ip数量限制")
     parser.add_argument("-lb", "--max_bt_ip_count", type=int, default=0, help="最大better ip的ip数量限制")
-    parser.add_argument("-p", "--port", type=int, default=0, help="用来检测的端口")
+    parser.add_argument("-p", "--port", type=int, default=443, help="用来检测的端口")
     parser.add_argument("-H", "--host", type=str, default=None, help="可用性域名")
     parser.add_argument("-dr", "--disable_rt", action="store_true", default=False, help="是否禁用RTT 测试")
     parser.add_argument("-dv", "--disable_vt", action="store_true", default=False, help="是否禁用可用性测试")
@@ -82,6 +82,8 @@ def load_config():
     parser.add_argument("-4", "--only_v4", action="store_true", default=False, help="仅测试ipv4")
     parser.add_argument("-6", "--only_v6", action="store_true", default=False, help="仅测试ipv6")
     parser.add_argument("-cs", "--cr_size", type=int, default=0, help="cidr 随机抽样ip 数量限制")
+    parser.add_argument("-df", "--disable_file_check", action="store_true", default=False, help="是否禁用可用性检测文件可用性")
+    parser.add_argument("--pure_mode", action="store_true", default=False, help="纯净模式, 不使用geo 数据库进行ip 信息补全, 仅记录ip")
     parser.add_argument(
         "--version",
         action="version",
@@ -98,6 +100,8 @@ def load_config():
     print('当前配置文件为:', config_path)
     Config.CONFIG_PATH = config_path
     config = Config()
+    config.pure_mode = args.pure_mode
+    print('纯净模式:', config.pure_mode)
     config.ro_verbose = args.verbose
     print('是否开启调试信息:', config.ro_verbose)
     if config.ro_verbose:
@@ -149,10 +153,10 @@ def load_config():
         print('rtt 测试已关闭')
     if not config.st_enabled:
         print('速度测试已关闭')
-    port = args.port
-    if port:
-        config.ip_port = port
+    config.ip_port = args.port
     print('测试端口为:', config.ip_port)
+    config.vt_file_check = args.disable_file_check == False
+    print('可用性测试文件检测开关为:', config.vt_file_check)
     if args.host:
         config.vt_host_name = args.host
     if args.rtt and args.rtt > 0:
@@ -235,6 +239,13 @@ def write_better_ips_to_file(ips: Iterable[IpInfo], path):
         f.write('\n')
     print('测试通过%d个优选ip 已导出到' % len(ips), path)
 
+def write_pure_ips_to_file(ips: Iterable[IpInfo], path):
+    with open(path, 'w', encoding='utf-8') as f:
+        for ip_info in ips:
+            f.write(ip_info.ip)
+            f.write('\n')
+    print('测试通过%d个优选ip 已导出到' % len(ips), path)
+
 
 def check_geo_update():
     global update_message
@@ -302,7 +313,10 @@ def run_ip_check():
         passed_ips = sorted(passed_ips, key=lambda x: x.max_speed, reverse=True)
         print_better_ips(passed_ips)
         if not config.no_save:
-            write_better_ips_to_file(passed_ips, config.ro_out_file)
+            if config.pure_mode:
+                write_pure_ips_to_file(passed_ips, config.ro_out_file)
+            else:
+                write_better_ips_to_file(passed_ips, config.ro_out_file)
     else:
         print('下载测试没有获取到可用ip, 测试停止!')
         return

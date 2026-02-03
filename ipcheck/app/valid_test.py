@@ -111,7 +111,7 @@ class ValidTest:
             pool.close()
 
             # 二次验证: 检查大文件Content-Length
-            if res and self.config.file_url:
+            if res and self.config.file_check and self.config.file_url:
                 if state_machine.ipcheck_stage != IpcheckStage.VALID_TEST:
                     return None
                 file_host, file_path = parse_url(self.config.file_url)

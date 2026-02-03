@@ -43,6 +43,7 @@ class Config(CommonConfig):
         self.no_save = False
         # cidr ip 数量限制
         self.cidr_sample_ip_num = 16
+        self.pure_mode = False
         # ro: runtime-only settings
         # 以下仅仅在运行时支持修改, 不支持文件配置
         # 测试ip 源, 可选ip、ip cidr、文本(读取ip、ip cidr)、zip 压缩包(遍历其中的txt 文本, 读取ip、ip cidr)
@@ -70,6 +71,8 @@ class Config(CommonConfig):
         self.vt_user_agent = False
         # 可用性检测路径, 固定的, 取决于cloudflare
         self.vt_path = '/cdn-cgi/trace'
+        # 是否检测文件可用性
+        self.vt_file_check = True
         # 可用性文件检测url
         self.vt_file_url = ''
         # 可用性测试多线程数量
