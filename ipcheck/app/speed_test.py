@@ -125,14 +125,15 @@ class SpeedTest:
                         continue
                     if end - real_start < 0.1:
                         continue
-                    speed_now = int((cur_size - old_size) / ((end - start) * 1024))
-                    avg_speed = int(cur_size / ((end - real_start) * 1024)) if end - real_start > 0.9 else speed_now
+                    freeze_size, freeze_end = cur_size, get_perfcounter()
+                    speed_now = int((freeze_size - old_size) / ((freeze_end - start) * 1024))
+                    avg_speed = int(freeze_size / ((freeze_end - real_start) * 1024)) if freeze_end - real_start > 0.9 else speed_now
                     content = '  当前下载速度(cur/avg)为: {}/{} kB/s'.format(speed_now, avg_speed)
                     show_freshable_content(content)
                     if speed_now > max_speed:
                         max_speed = speed_now
-                    start = end
-                    old_size = cur_size
+                    start = freeze_end
+                    old_size = freeze_size
                 if real_start == 0:
                     continue
                 # 快速测速逻辑
