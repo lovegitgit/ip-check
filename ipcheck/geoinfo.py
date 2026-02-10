@@ -5,11 +5,11 @@ from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, GEO2CITY_DB_PATH, GEO2ASN
 from ipcheck.app.config import Config
 from ipcheck.app.gen_ip_utils import gen_ip_list
 from ipcheck.app.geo_utils import check_or_gen_def_config, download_geo_db, parse_geo_config, check_geo_version, save_version
-import argparse
 import subprocess
 import sys
-from ipcheck.app.utils import UniqueListAction, print_file_content
+from ipcheck.app.utils import print_file_content
 from ipcheck.app.statemachine import state_machine
+from ipcheck.app.cli_args import parse_args
 
 def ask_confirm(prompt_str):
     while True:
@@ -24,9 +24,7 @@ def ask_confirm(prompt_str):
 
 def get_info():
     state_machine.work_mode = WorkMode.IGEO_INFO
-    parser = argparse.ArgumentParser(description='geo-info 获取ip(s) 的归属地信息')
-    parser.add_argument("sources", action=UniqueListAction, nargs="+", help="待获取归属地信息的ip(s)")
-    args = parser.parse_args()
+    args = parse_args(WorkMode.IGEO_INFO)
     config = Config()
     config.ro_ip_source = args.sources
     ip_list = gen_ip_list(False)
@@ -39,18 +37,7 @@ def get_info():
 
 def filter_ips():
     state_machine.work_mode = WorkMode.IP_FILTER
-    parser = argparse.ArgumentParser(description='ip-filter: ip 筛选工具')
-    parser.add_argument("sources", action=UniqueListAction, nargs="+", help="待筛选的ip(s)")
-    parser.add_argument("-w", "--white_list", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好ip参数, 格式为: expr1 expr2, 如8 9 会筛选8和9开头的ip')
-    parser.add_argument("-b", "--block_list", action=UniqueListAction, type=str, nargs='+', default=None, help='屏蔽ip参数, 格式为: expr1 expr2, 如8 9 会过滤8和9开头的ip')
-    parser.add_argument("-pl", "--prefer_locs", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好国家地区选择, 格式为: expr1 expr2, 如hongkong japan 会筛选HongKong 和Japan 地区的ip')
-    parser.add_argument("-po", "--prefer_orgs", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好org 选择, 格式为: expr1 expr2, 如org1 org2 会筛选org1, org2 的服务商ip')
-    parser.add_argument("-bo", "--block_orgs", action=UniqueListAction, type=str, nargs='+', default=None, help='屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip')
-    parser.add_argument("-4", "--only_v4", action="store_true", default=False, help="仅筛选ipv4")
-    parser.add_argument("-6", "--only_v6", action="store_true", default=False, help="仅筛选ipv6")
-    parser.add_argument("-cs", "--cr_size", type=int, default=0, help="cidr 随机抽样ip 数量限制")
-    parser.add_argument("-o", "--output", type=str, default=None, help="输出文件")
-    args = parser.parse_args()
+    args = parse_args(WorkMode.IP_FILTER)
     config = Config()
     config.ro_ip_source = args.sources
     out_file = args.output
@@ -102,11 +89,7 @@ def filter_ips():
 
 def download_db():
     state_machine.work_mode = WorkMode.IGEO_DL
-    parser = argparse.ArgumentParser(description='igeo-dl 升级/下载geo 数据库')
-    parser.add_argument("-u", "--url", type=str, default=None, help="geo 数据库下载地址, 要求结尾包含GeoLite2-City.mmdb 或GeoLite2-ASN.mmdb")
-    parser.add_argument("-p", "--proxy", type=str, default=None, help="下载时使用的代理")
-    parser.add_argument("-y", "--yes", action="store_true", default=False, help="自动确认更新并下载 GEO 数据库")
-    args = parser.parse_args()
+    args = parse_args(WorkMode.IGEO_DL)
     url = args.url
     proxy = args.proxy
     auto_confirm = args.yes
@@ -125,9 +108,7 @@ def download_db():
 
 def config_edit():
     state_machine.work_mode = WorkMode.IGEO_CFG
-    parser = argparse.ArgumentParser(description='geo-cfg 编辑geo config')
-    parser.add_argument("-e", "--example", action="store_true", default=False, help="显示配置文件示例")
-    args = parser.parse_args()
+    args = parse_args(WorkMode.IGEO_CFG)
     if args.example:
         print_file_content(GEO_DEF_CONFIG_PATH)
         return

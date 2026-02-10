@@ -27,8 +27,8 @@ ip-check -h
 usage: ip-check [-h] [-w WHITE_LIST [WHITE_LIST ...]] [-b BLOCK_LIST [BLOCK_LIST ...]] [-pl PREFER_LOCS [PREFER_LOCS ...]]
                 [-po PREFER_ORGS [PREFER_ORGS ...]] [-bo BLOCK_ORGS [BLOCK_ORGS ...]] [-pp PREFER_PORTS [PREFER_PORTS ...]] [-lv MAX_VT_IP_COUNT]
                 [-lr MAX_RT_IP_COUNT] [-ls MAX_ST_IP_COUNT] [-lb MAX_BT_IP_COUNT] [-p PORT] [-H HOST] [-dr] [-dv] [-ds] [-o OUTPUT] [-f] [-s SPEED]
-                [-as AVG_SPEED] [-r RTT] [-l LOSS] [-c CONFIG] [-v] [-ns] [--dry_run] [--version]
-                source [source ...]
+                [-as AVG_SPEED] [-r RTT] [-l LOSS] [-c CONFIG] [-u URL] [-v] [-ns] [--dry_run] [-4] [-6] [-cs CR_SIZE] [-df] [--pure_mode]
+                [--version] source [source ...]
 
 ip-check 参数
 
@@ -81,6 +81,9 @@ optional arguments:
   -6, --only_v6         仅测试ipv6
   -cs CR_SIZE, --cr_size CR_SIZE
                         cidr 随机ip 数量限制
+  -df, --disable_file_check
+                        是否禁用可用性检测文件可用性
+  --pure_mode           纯净模式, 不使用geo 数据库进行ip 信息补全, 仅记录ip
   --version             show program's version number and exit
 ```
 
