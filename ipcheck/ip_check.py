@@ -4,7 +4,6 @@
 import os
 import sys
 import subprocess
-import signal
 import threading
 from ipcheck import WorkMode, IpcheckStage, __version__, IP_CHECK_DEF_CONFIG_PATH, IP_CHECK_CONFIG_PATH
 from ipcheck.app.config import Config
@@ -17,7 +16,7 @@ from ipcheck.app.rtt_test import RttTest
 from ipcheck.app.speed_test import SpeedTest
 from ipcheck.app.geo_utils import parse_geo_config, check_geo_version
 from typing import Iterable
-from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, parse_url, is_hostname, get_perfcounter, UniqueListAction, copy_file, print_file_content
+from ipcheck.app.utils import is_ip_address, is_ip_network, gen_time_desc, parse_url, is_hostname, UniqueListAction, copy_file, print_file_content
 
 # msg to notify user about geo db update
 update_message = None
@@ -25,23 +24,6 @@ update_message = None
 def print_cache():
     if state_machine.stop_event.is_set():
         state_machine.print_cache()
-
-# 注册全局退出监听
-def signal_handler(sig, frame):
-    cur_ts = get_perfcounter()
-    ts_diff = cur_ts - state_machine.last_user_inject_ts
-    state_machine.last_user_inject_ts = cur_ts
-    if ts_diff < 1.5:
-        os._exit(0)
-    if state_machine.work_mode == WorkMode.IP_CHECK:
-        if state_machine.ipcheck_stage == IpcheckStage.UNKNOWN:
-            os._exit(0)
-        if not state_machine.stop_event.is_set():
-            if IpcheckStage.UNKNOWN < state_machine.ipcheck_stage < IpcheckStage.TEST_EXIT:
-                state_machine.ipcheck_stage += 1
-                state_machine.stop_event.set()
-
-signal.signal(signal.SIGINT, signal_handler)
 
 def check_or_gen_def_config(def_cfg_path):
     if not os.path.exists(def_cfg_path):
@@ -350,6 +332,3 @@ def config_edit():
     else:
         print('未知的操作系统, 请尝试手动修改{}!'.format(config_path))
 
-
-if __name__ == '__main__':
-    main()

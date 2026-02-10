@@ -25,12 +25,12 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'ip-check = ipcheck.main:main',
-            'ip-check-cfg = ipcheck.main:config_edit',
-            'igeo-info = ipcheck.geoinfo:get_info',
-            'igeo-dl = ipcheck.geoinfo:download_db',
-            'igeo-cfg = ipcheck.geoinfo:config_edit',
-            'ip-filter = ipcheck.geoinfo:filter_ips',
+            'ip-check = ipcheck.cli:ip_check',
+            'ip-check-cfg = ipcheck.cli:ip_check_cfg',
+            'igeo-info = ipcheck.cli:igeo_info',
+            'igeo-dl = ipcheck.cli:igeo_dl',
+            'igeo-cfg = ipcheck.cli:igeo_cfg',
+            'ip-filter = ipcheck.cli:ip_filter',
         ]
     },
     python_requires=">=3.8",

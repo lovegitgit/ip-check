@@ -8,17 +8,8 @@ from ipcheck.app.geo_utils import check_or_gen_def_config, download_geo_db, pars
 import argparse
 import subprocess
 import sys
-import signal
-import os
 from ipcheck.app.utils import UniqueListAction, print_file_content
 from ipcheck.app.statemachine import state_machine
-
-# 全局退出监听
-def signal_handler(sig, frame):
-    state_machine.stop_event.set()
-    os._exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
 
 def ask_confirm(prompt_str):
     while True:
@@ -194,7 +185,3 @@ def self_update(proxy=None, auto_confirm=False):
     res_city = download_geo_db(db_city_url, GEO2CITY_DB_PATH, proxy)
     if res_asn and res_city:
         save_version(remote_version)
-
-
-if __name__ == '__main__':
-    get_info()
