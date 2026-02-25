@@ -1,6 +1,9 @@
 __pycache__/
 __pycache__/*
 __pycache__/**/*
+*.pyc
+*.pyo
+*.pyd
 ip_check.egg-info/
 ip_check.egg-info/*
 ip_check.egg-info/**/*
