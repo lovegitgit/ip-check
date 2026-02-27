@@ -5,7 +5,7 @@ from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.statemachine import state_machine
 from ipcheck.app.valid_test_config import ValidTestConfig
-from ipcheck.app.utils import adjust_list_by_size, show_freshable_content, parse_url
+from ipcheck.app.utils import adjust_list_by_size, freshable_printer, parse_url
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import urllib3
 from ipcheck.app.ip_info import IpInfo
@@ -64,7 +64,7 @@ class ValidTest:
                 except Exception:
                     pass
                 content = '  当前进度为: {}/{}, {} pass'.format(test_count, total_count, pass_count)
-                show_freshable_content(content)
+                freshable_printer.show(content)
 
         thread_pool_executor.shutdown(wait=True)
         print('可用性结果为: 总数{}, {} pass'.format(len(self.ip_list), len(passed_ips)))

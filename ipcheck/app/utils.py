@@ -17,6 +17,7 @@ import socket
 import asyncio
 import time
 import threading
+import queue
 
 
 class UniqueListAction(argparse.Action):
@@ -162,9 +163,79 @@ def gen_time_desc():
     # 格式化时间为字符串, 精确到秒
     return '{}: {}'.format('生成时间为', current_time.strftime("%Y-%m-%d %H:%M:%S"))
 
+
+def singleton(cls):
+    """
+    将一个类作为单例
+    来自 https://wiki.python.org/moin/PythonDecoratorLibrary#Singleton
+    """
+
+    cls.__new_original__ = cls.__new__
+
+    @functools.wraps(cls.__new__)
+    def singleton_new(cls, *args, **kw):
+        it = cls.__dict__.get('__it__')
+        if it is not None:
+            return it
+
+        if cls.__new_original__ is object.__new__:
+            cls.__it__ = it = cls.__new_original__(cls)
+        else:
+            cls.__it__ = it = cls.__new_original__(cls, *args, **kw)
+        it.__init_original__(*args, **kw)
+        return it
+
+    cls.__new__ = singleton_new
+    cls.__init_original__ = cls.__init__
+    cls.__init__ = object.__init__
+
+    return cls
+
+@singleton
+class FreshablePrinter:
+    def __init__(self, maxsize: int = 1):
+        self._queue = queue.Queue(maxsize=maxsize)
+        self._thread = None
+        self._lock = threading.Lock()
+
+    def _worker(self):
+        while True:
+            content = self._queue.get()
+            # 只保留并输出最新的一条，避免高并发下控制台输出积压
+            while True:
+                try:
+                    content = self._queue.get_nowait()
+                except queue.Empty:
+                    break
+            print(content, end='\r', flush=True)
+    def _ensure_started(self):
+        if self._thread and self._thread.is_alive():
+            return
+        with self._lock:
+            if self._thread and self._thread.is_alive():
+                return
+            self._thread = threading.Thread(target=self._worker, daemon=True)
+            self._thread.start()
+
+    def show(self, content: str):
+        self._ensure_started()
+        try:
+            self._queue.put_nowait(content)
+        except queue.Full:
+            try:
+                self._queue.get_nowait()
+            except queue.Empty:
+                pass
+            try:
+                self._queue.put_nowait(content)
+            except queue.Full:
+                pass
+
+
+freshable_printer = FreshablePrinter(maxsize=1)
+
 def show_freshable_content(content: str):
-    print(content, end='\r')
-    sys.__stdout__.flush()
+    freshable_printer.show(content)
 
 def write_file(content: str, path: str):
     with open(path, 'w', encoding='utf-8') as f:
@@ -268,27 +339,3 @@ def get_family_addr(host, port):
     except:
         pass
     return family, sockaddr
-
-def singleton(cls):
-    """
-    将一个类作为单例
-    来自 https://wiki.python.org/moin/PythonDecoratorLibrary#Singleton
-    """
-
-    cls.__new_original__ = cls.__new__
-
-    @functools.wraps(cls.__new__)
-    def singleton_new(cls, *args, **kw):
-        it = cls.__dict__.get('__it__')
-        if it is not None:
-            return it
-
-        cls.__it__ = it = cls.__new_original__(cls, *args, **kw)
-        it.__init_original__(*args, **kw)
-        return it
-
-    cls.__new__ = singleton_new
-    cls.__init_original__ = cls.__init__
-    cls.__init__ = object.__init__
-
-    return cls

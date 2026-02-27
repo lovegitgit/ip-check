@@ -9,7 +9,7 @@ from ipcheck import IpcheckStage
 from ipcheck.app.rtt_test_config import RttTestConfig
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.statemachine import state_machine
-from ipcheck.app.utils import adjust_list_by_size, get_perfcounter, show_freshable_content, get_family_addr, sleep_secs
+from ipcheck.app.utils import adjust_list_by_size, get_perfcounter, freshable_printer, get_family_addr, sleep_secs
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 
 
@@ -61,7 +61,7 @@ class RttTest:
                 except Exception:
                     pass
                 content = '  当前进度为: {}/{}, {} pass'.format(test_count, total_count, pass_count)
-                show_freshable_content(content)
+                freshable_printer.show(content)
 
         thread_pool_executor.shutdown(wait=True)
         print('rtt 结果为: 总数{}, {} pass'.format(total_count, pass_count))

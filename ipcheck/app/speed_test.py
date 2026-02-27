@@ -5,7 +5,7 @@ from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.speed_test_config import SpeedTestConfig
 from ipcheck.app.statemachine import state_machine
-from ipcheck.app.utils import adjust_list_by_size, show_freshable_content, parse_url, get_perfcounter, sleep_secs
+from ipcheck.app.utils import adjust_list_by_size, freshable_printer, parse_url, get_perfcounter, sleep_secs
 import threading
 import urllib3
 from ipcheck.app.ip_info import IpInfo
@@ -129,7 +129,7 @@ class SpeedTest:
                     speed_now = int((freeze_size - old_size) / ((freeze_end - start) * 1024))
                     avg_speed = int(freeze_size / ((freeze_end - real_start) * 1024)) if freeze_end - real_start > 0.9 else speed_now
                     content = '  当前下载速度(cur/avg)为: {}/{} kB/s'.format(speed_now, avg_speed)
-                    show_freshable_content(content)
+                    freshable_printer.show(content)
                     if speed_now > max_speed:
                         max_speed = speed_now
                     start = freeze_end
