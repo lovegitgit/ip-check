@@ -208,6 +208,7 @@ class FreshablePrinter:
                 except queue.Empty:
                     break
             print(content, end='\r', flush=True)
+
     def _ensure_started(self):
         if self._thread and self._thread.is_alive():
             return
