@@ -19,6 +19,7 @@ import time
 import threading
 import queue
 import builtins
+import unicodedata
 
 
 class UniqueListAction(argparse.Action):
@@ -199,7 +200,7 @@ class FreshablePrinter:
         self._thread = None
         self._lock = threading.Lock()
         self._io_lock = threading.Lock()
-        self._last_len = 0
+        self._last_cols = 0
         self._line_open = False
         self._raw_stdout = sys.stdout
 
@@ -213,12 +214,13 @@ class FreshablePrinter:
                 except queue.Empty:
                     break
             content = str(content)
-            pad_len = max(0, self._last_len - len(content))
+            content_cols = _display_width(content)
+            pad_len = max(0, self._last_cols - content_cols)
             # 回到行首重绘，打印后光标停在行尾。
             with self._io_lock:
                 self._raw_stdout.write('\r' + content + (' ' * pad_len))
                 self._raw_stdout.flush()
-                self._last_len = len(content)
+                self._last_cols = content_cols
                 self._line_open = True
 
     def _ensure_started(self):
@@ -287,13 +289,13 @@ class _FreshAwareStdout:
         with self._printer._io_lock:
             # 如有刷新行未结束，普通输出前先擦除该行，避免把进度行固化为历史行。
             if self._printer._line_open and not data.startswith('\r'):
-                self._wrapped.write('\r' + (' ' * self._printer._last_len) + '\r')
+                self._wrapped.write('\r' + (' ' * self._printer._last_cols) + '\r')
                 self._printer._line_open = False
-                self._printer._last_len = 0
+                self._printer._last_cols = 0
             written = self._wrapped.write(data)
             if '\n' in data:
                 self._printer._line_open = False
-                self._printer._last_len = 0
+                self._printer._last_cols = 0
             return written
 
     def flush(self):
@@ -407,3 +409,15 @@ def get_family_addr(host, port):
     except:
         pass
     return family, sockaddr
+
+
+def _display_width(text: str):
+    width = 0
+    for ch in text:
+        if ch == '\t':
+            width += 4
+            continue
+        if unicodedata.combining(ch):
+            continue
+        width += 2 if unicodedata.east_asian_width(ch) in ('W', 'F') else 1
+    return width
