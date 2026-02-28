@@ -9,7 +9,7 @@ from ipcheck import IpcheckStage
 from ipcheck.app.rtt_test_config import RttTestConfig
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.statemachine import state_machine
-from ipcheck.app.utils import adjust_list_by_size, get_perfcounter, freshable_printer, get_family_addr, sleep_secs
+from ipcheck.app.utils import console_print, console_refresh, adjust_list_by_size, get_perfcounter, get_family_addr, sleep_secs
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 
 
@@ -21,18 +21,18 @@ class RttTest:
 
     def run(self) -> Iterable[IpInfo]:
         if not self.config.enabled:
-            print('跳过RTT测试')
+            console_print('跳过RTT测试')
             return self.ip_list
         state_machine.ipcheck_stage = IpcheckStage.RTT_TEST
         state_machine.stop_event.clear()
         state_machine.clear()
-        print('准备测试rtt ... ...')
-        print('rtt ping 间隔为: {}秒'.format(self.config.interval))
+        console_print('准备测试rtt ... ...')
+        console_print('rtt ping 间隔为: {}秒'.format(self.config.interval))
         if len(self.ip_list) > self.config.ip_limit_count:
-            print('待测试ip 过多, 当前最大限制数量为{} 个, 压缩中... ...'.format(self.config.ip_limit_count))
+            console_print('待测试ip 过多, 当前最大限制数量为{} 个, 压缩中... ...'.format(self.config.ip_limit_count))
             self.ip_list = adjust_list_by_size(self.ip_list, self.config.ip_limit_count)
         total_count = len(self.ip_list)
-        print('正在测试ip rtt, 总数为{}'.format(total_count))
+        console_print('正在测试ip rtt, 总数为{}'.format(total_count))
         test_count = 0
         pass_count = 0
         passed_ips = []
@@ -54,17 +54,17 @@ class RttTest:
                     test_count += 1
                     if ip_info.rtt != -1:
                         state_machine.cache(ip_info)
-                        print(ip_info.get_rtt_info())
+                        console_print(ip_info.get_rtt_info())
                         if ip_info.rtt <= self.config.max_rtt and ip_info.loss <= self.config.max_loss:
                             passed_ips.append(ip_info)
                             pass_count += 1
                 except Exception:
                     pass
                 content = '  当前进度为: {}/{}, {} pass'.format(test_count, total_count, pass_count)
-                freshable_printer.show(content)
+                console_refresh(content)
 
         thread_pool_executor.shutdown(wait=True)
-        print('rtt 结果为: 总数{}, {} pass'.format(total_count, pass_count))
+        console_print('rtt 结果为: 总数{}, {} pass'.format(total_count, pass_count))
         return passed_ips
 
     def __test(self, ip_info: IpInfo) -> IpInfo:
@@ -115,7 +115,7 @@ async def async_tcpping(
             packets_sent += 1
         except (asyncio.TimeoutError, socket.gaierror, OSError) as e:
             if print_err:
-                print(e)
+                console_print(e)
             packets_lost += 1
         finally:
             s.close()
@@ -169,7 +169,7 @@ def tcpping(
         else:
             packets_lost += 1
             if print_err:
-                print(f'rtt test for {ipinfo.simple_info} returns {err}')
+                console_print(f'rtt test for {ipinfo.simple_info} returns {err}')
         try:
             s.close()
         except:

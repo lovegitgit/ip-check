@@ -18,6 +18,7 @@ import asyncio
 import time
 import threading
 import queue
+import builtins
 
 
 class UniqueListAction(argparse.Action):
@@ -88,7 +89,7 @@ async def async_hostname_lookup(hostname: str, port: int = 80, family=socket.AF_
         results = [info[4][0] for info in addr_info]
     except (socket.gaierror, OSError):
         if print_err:
-            print(f'resolve {hostname} error!')
+            console_print(f'resolve {hostname} error!')
     return results
 
 def hostname_lookup(hostname: str, port: int = 80, family=socket.AF_UNSPEC, print_err=False):
@@ -105,7 +106,7 @@ def hostname_lookup(hostname: str, port: int = 80, family=socket.AF_UNSPEC, prin
         results = [info[4][0] for info in addr_info]
     except (socket.gaierror, OSError):
         if print_err:
-            print(f'resolve {hostname} error!')
+            console_print(f'resolve {hostname} error!')
     return results
 
 def get_resolve_ips(hostname, port, family=socket.AF_UNSPEC):
@@ -197,6 +198,10 @@ class FreshablePrinter:
         self._queue = queue.Queue(maxsize=maxsize)
         self._thread = None
         self._lock = threading.Lock()
+        self._io_lock = threading.Lock()
+        self._last_len = 0
+        self._line_open = False
+        self._raw_stdout = sys.stdout
 
     def _worker(self):
         while True:
@@ -207,7 +212,14 @@ class FreshablePrinter:
                     content = self._queue.get_nowait()
                 except queue.Empty:
                     break
-            print(content, end='\r', flush=True)
+            content = str(content)
+            pad_len = max(0, self._last_len - len(content))
+            # 回到行首重绘，打印后光标停在行尾。
+            with self._io_lock:
+                self._raw_stdout.write('\r' + content + (' ' * pad_len))
+                self._raw_stdout.flush()
+                self._last_len = len(content)
+                self._line_open = True
 
     def _ensure_started(self):
         if self._thread and self._thread.is_alive():
@@ -218,7 +230,20 @@ class FreshablePrinter:
             self._thread = threading.Thread(target=self._worker, daemon=True)
             self._thread.start()
 
+    def _ensure_stdout_wrapper(self):
+        if getattr(sys.stdout, '_freshaware_enabled', False):
+            return
+        with self._io_lock:
+            if getattr(sys.stdout, '_freshaware_enabled', False):
+                return
+            self._raw_stdout = sys.stdout
+            sys.stdout = _FreshAwareStdout(sys.stdout, self)
+
+    def install(self):
+        self._ensure_stdout_wrapper()
+
     def show(self, content: str):
+        self._ensure_stdout_wrapper()
         self._ensure_started()
         try:
             self._queue.put_nowait(content)
@@ -232,11 +257,53 @@ class FreshablePrinter:
             except queue.Full:
                 pass
 
+    def log(self, *args, **kwargs):
+        self._ensure_stdout_wrapper()
+        return self._raw_stdout_print(*args, **kwargs)
+
+    def _raw_stdout_print(self, *args, **kwargs):
+        kwargs.setdefault('file', sys.stdout)
+        return builtins.print(*args, **kwargs)
+
 
 freshable_printer = FreshablePrinter(maxsize=1)
 
-def show_freshable_content(content: str):
+def console_refresh(content: str):
     freshable_printer.show(content)
+
+def console_print(*args, **kwargs):
+    freshable_printer.log(*args, **kwargs)
+
+
+class _FreshAwareStdout:
+    def __init__(self, wrapped, printer):
+        self._wrapped = wrapped
+        self._printer = printer
+        self._freshaware_enabled = True
+
+    def write(self, data):
+        if not data:
+            return 0
+        with self._printer._io_lock:
+            # 如有刷新行未结束，普通输出前先擦除该行，避免把进度行固化为历史行。
+            if self._printer._line_open and not data.startswith('\r'):
+                self._wrapped.write('\r' + (' ' * self._printer._last_len) + '\r')
+                self._printer._line_open = False
+                self._printer._last_len = 0
+            written = self._wrapped.write(data)
+            if '\n' in data:
+                self._printer._line_open = False
+                self._printer._last_len = 0
+            return written
+
+    def flush(self):
+        return self._wrapped.flush()
+
+    def __getattr__(self, item):
+        return getattr(self._wrapped, item)
+
+
+freshable_printer.install()
 
 def write_file(content: str, path: str):
     with open(path, 'w', encoding='utf-8') as f:
@@ -252,14 +319,14 @@ def print_file_content(file_path: str):
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             for ct in f.readlines():
-                print(ct, end='')
-            print()
+                console_print(ct, end='')
+            console_print()
     except Exception as e:
-        print(f'读取{file_path} 失败: {e}')
+        console_print(f'读取{file_path} 失败: {e}')
 
 def download_file(url, path, proxy):
     # 发起请求并获取响应对象
-    print('下载代理为: {}'.format(proxy))
+    console_print('下载代理为: {}'.format(proxy))
     proxies = {}
     if proxy:
         proxies = {
@@ -294,7 +361,7 @@ def get_json_from_net(url: str, proxy=None, verbose=True):
     from ipcheck.app.statemachine import state_machine
     res = {}
     if verbose:
-        print('请求代理为: {}'.format(proxy))
+        console_print('请求代理为: {}'.format(proxy))
     proxies = {}
     if proxy:
         proxies = {

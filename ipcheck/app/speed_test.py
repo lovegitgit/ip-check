@@ -5,7 +5,7 @@ from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.speed_test_config import SpeedTestConfig
 from ipcheck.app.statemachine import state_machine
-from ipcheck.app.utils import adjust_list_by_size, freshable_printer, parse_url, get_perfcounter, sleep_secs
+from ipcheck.app.utils import console_print, console_refresh, adjust_list_by_size, parse_url, get_perfcounter, sleep_secs
 import threading
 import urllib3
 from ipcheck.app.ip_info import IpInfo
@@ -24,24 +24,24 @@ class SpeedTest:
 
     def run(self) -> Iterable[IpInfo]:
         if not self.config.enabled:
-            print('跳过速度测试')
+            console_print('跳过速度测试')
             return self.ip_list
         state_machine.ipcheck_stage = IpcheckStage.SPEED_TEST
         state_machine.stop_event.clear()
         state_machine.clear()
-        print('准备测试下载速度 ... ...')
-        print('是否使用user-agent: {}'.format(self.config.user_agent))
+        console_print('准备测试下载速度 ... ...')
+        console_print('是否使用user-agent: {}'.format(self.config.user_agent))
         if len(self.ip_list) > self.config.ip_limit_count:
-            print('待测试ip 过多, 当前最大限制数量为{} 个, 压缩中... ...'.format(self.config.ip_limit_count))
+            console_print('待测试ip 过多, 当前最大限制数量为{} 个, 压缩中... ...'.format(self.config.ip_limit_count))
             self.ip_list = adjust_list_by_size(self.ip_list, self.config.ip_limit_count)
-        print('正在测试ip 下载速度, 总数为{}'.format(len(self.ip_list)))
+        console_print('正在测试ip 下载速度, 总数为{}'.format(len(self.ip_list)))
         total_num = len(self.ip_list)
         passed_ips = []
         for i in range(total_num):
             if state_machine.ipcheck_stage != IpcheckStage.SPEED_TEST:
                 break
             test_ip_info = self.ip_list[i]
-            print('正在测速第{}/{}个ip: {}:{} {}_{} rtt {} ms'.format(i + 1,
+            console_print('正在测速第{}/{}个ip: {}:{} {}_{} rtt {} ms'.format(i + 1,
                                                              total_num,
                                                              test_ip_info.ip_str,
                                                              test_ip_info.port,
@@ -50,7 +50,7 @@ class SpeedTest:
                                                              test_ip_info.rtt))
             test_ip_info = self.__test(test_ip_info)
             state_machine.cache(test_ip_info)
-            print(test_ip_info.get_info())
+            console_print(test_ip_info.get_info())
             if test_ip_info.max_speed >= self.config.download_speed and test_ip_info.avg_speed >= self.config.avg_download_speed:
                 passed_ips.append(test_ip_info)
             if self.config.bt_ip_limit > 0 and len(passed_ips) >= self.config.bt_ip_limit:
@@ -98,7 +98,7 @@ class SpeedTest:
             except Exception as e:
                 has_error = True
                 if self.config.print_err:
-                    print(f'speed test for {ip_info.simple_info} encounters error {e}')
+                    console_print(f'speed test for {ip_info.simple_info} encounters error {e}')
             download_exit = True
 
         def cal_speed():
@@ -129,7 +129,7 @@ class SpeedTest:
                     speed_now = int((freeze_size - old_size) / ((freeze_end - start) * 1024))
                     avg_speed = int(freeze_size / ((freeze_end - real_start) * 1024)) if freeze_end - real_start > 0.9 else speed_now
                     content = '  当前下载速度(cur/avg)为: {}/{} kB/s'.format(speed_now, avg_speed)
-                    freshable_printer.show(content)
+                    console_refresh(content)
                     if speed_now > max_speed:
                         max_speed = speed_now
                     start = freeze_end

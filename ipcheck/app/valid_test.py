@@ -5,7 +5,7 @@ from typing import Iterable
 from ipcheck import IpcheckStage
 from ipcheck.app.statemachine import state_machine
 from ipcheck.app.valid_test_config import ValidTestConfig
-from ipcheck.app.utils import adjust_list_by_size, freshable_printer, parse_url
+from ipcheck.app.utils import console_print, console_refresh, adjust_list_by_size, parse_url
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import urllib3
 from ipcheck.app.ip_info import IpInfo
@@ -23,19 +23,19 @@ class ValidTest:
 
     def run(self) -> Iterable[IpInfo]:
         if not self.config.enabled:
-            print('跳过可用性测试')
+            console_print('跳过可用性测试')
             return self.ip_list
         state_machine.ipcheck_stage = IpcheckStage.VALID_TEST
         state_machine.stop_event.clear()
         state_machine.clear()
-        print('准备测试可用性 ... ...')
+        console_print('准备测试可用性 ... ...')
         if len(self.ip_list) > self.config.ip_limit_count:
-            print('待测试ip 过多, 当前最大限制数量为{} 个, 压缩中... ...'.format(self.config.ip_limit_count))
+            console_print('待测试ip 过多, 当前最大限制数量为{} 个, 压缩中... ...'.format(self.config.ip_limit_count))
             self.ip_list = adjust_list_by_size(self.ip_list, self.config.ip_limit_count)
-        print('可用性域名为: {}'.format(self.config.host_name))
-        print('是否使用user-agent: {}'.format(self.config.user_agent))
+        console_print('可用性域名为: {}'.format(self.config.host_name))
+        console_print('是否使用user-agent: {}'.format(self.config.user_agent))
         total_count = len(self.ip_list)
-        print('正在测试ip可用性, 总数为{}'.format(total_count))
+        console_print('正在测试ip可用性, 总数为{}'.format(total_count))
         passed_ips = []
         thread_pool_executor = ThreadPoolExecutor(
             max_workers=self.config.thread_num, thread_name_prefix="valid_")
@@ -64,10 +64,10 @@ class ValidTest:
                 except Exception:
                     pass
                 content = '  当前进度为: {}/{}, {} pass'.format(test_count, total_count, pass_count)
-                freshable_printer.show(content)
+                console_refresh(content)
 
         thread_pool_executor.shutdown(wait=True)
-        print('可用性结果为: 总数{}, {} pass'.format(len(self.ip_list), len(passed_ips)))
+        console_print('可用性结果为: 总数{}, {} pass'.format(len(self.ip_list), len(passed_ips)))
         return passed_ips
 
     def __test(self, ip_info) -> None:
@@ -146,5 +146,5 @@ class ValidTest:
         except Exception as e:
             res = None
             if self.config.print_err:
-                print(f'valid test for {ip_info.simple_info} encounters err {e}')
+                console_print(f'valid test for {ip_info.simple_info} encounters err {e}')
         return res

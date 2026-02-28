@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-from ipcheck.app.utils import singleton
+from ipcheck.app.utils import singleton, console_print
 from ipcheck.app.ip_info import IpInfo
 from ipcheck import WorkMode
 from ipcheck import IpcheckStage
@@ -43,9 +43,9 @@ class StateMachine:
         fixed_ip_list = []
         if self.ip_list:
             fixed_ip_list = sorted(self.ip_list, key=lambda x: (x.max_speed * -1, x.rtt, x.country_city))
-            print('当前测试阶段IP 信息如下:')
+            console_print('当前测试阶段IP 信息如下:')
             for ip_info in fixed_ip_list:
-                print(ip_info)
+                console_print(ip_info)
 
 # 导出全局单例实例，方便外部直接引用
 state_machine = StateMachine()

@@ -7,16 +7,16 @@ import geoip2.database
 from typing import Iterable
 from ipcheck.app.ip_info import IpInfo
 from ipcheck.app.statemachine import state_machine
-from ipcheck.app.utils import download_file, copy_file, get_json_from_net
+from ipcheck.app.utils import download_file, copy_file, get_json_from_net, console_print
 import json
 
 from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, GEO2CITY_DB_PATH, GEO2ASN_DB_PATH, GEO_CONFIG_PATH, GEO_DEF_CONFIG_PATH, GEO_VERSION_PATH
 
 def download_geo_db(url :str, path:str, proxy=None):
-    print('正在下载geo database ... ...')
+    console_print('正在下载geo database ... ...')
     res = download_file(url, path, proxy)
     result_str = '成功.' if res else '失败!'
-    print('下载geo database到{} {}'.format(path, result_str))
+    console_print('下载geo database到{} {}'.format(path, result_str))
     return res
 
 def handle_blank_in_str(handle_str: str):
@@ -51,7 +51,7 @@ def get_geo_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
                 return res
         except:
             state_machine.geo_loc_avaiable = False
-            print('{} 数据库异常, 无法获取IP 归属地信息, 请执行igeo-dl 重新下载!'.format(GEO2CITY_DB_NAME))
+            console_print('{} 数据库异常, 无法获取IP 归属地信息, 请执行igeo-dl 重新下载!'.format(GEO2CITY_DB_NAME))
             return infos
 
     def get_asn_org_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
@@ -78,7 +78,7 @@ def get_geo_info(infos: Iterable[IpInfo]) -> Iterable[IpInfo]:
                 return res
         except:
             state_machine.geo_asn_org_avaiable = False
-            print('{} 数据库异常, 无法获取IP ASN/ORG信息, 请执行igeo-dl 重新下载!'.format(GEO2ASN_DB_NAME))
+            console_print('{} 数据库异常, 无法获取IP ASN/ORG信息, 请执行igeo-dl 重新下载!'.format(GEO2ASN_DB_NAME))
             return infos
 
     res = get_loc_info(infos)
@@ -131,6 +131,6 @@ def save_version(version: json):
 
 def check_or_gen_def_config():
     if not os.path.exists(GEO_CONFIG_PATH):
-        print('警告: 配置文件不存在, 正在生成默认配置... ...')
+        console_print('警告: 配置文件不存在, 正在生成默认配置... ...')
         copy_file(GEO_DEF_CONFIG_PATH, GEO_CONFIG_PATH)
-        print('配置文件已生成位于 {}, 请按需要修改!'.format(GEO_CONFIG_PATH))
+        console_print('配置文件已生成位于 {}, 请按需要修改!'.format(GEO_CONFIG_PATH))

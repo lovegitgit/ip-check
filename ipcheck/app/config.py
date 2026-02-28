@@ -8,7 +8,7 @@ from ipcheck.app.common_config import CommonConfig
 from ipcheck.app.valid_test_config import ValidTestConfig
 from ipcheck.app.rtt_test_config import RttTestConfig
 from ipcheck.app.speed_test_config import SpeedTestConfig
-from ipcheck.app.utils import singleton
+from ipcheck.app.utils import singleton, console_print
 
 SECTION_COMMON = 'common'
 SECTION_COMMON_PREFIX = ''
@@ -165,7 +165,7 @@ class Config(CommonConfig):
                     expr = "self.{} = '{}'".format(key, value)
                 else:
                     expr = 'self.{} = {}'.format(key, value)
-                # print(expr)
+                # console_print(expr)
                 exec(expr)
 
 
@@ -211,4 +211,4 @@ class Config(CommonConfig):
 
 if __name__ == '__main__':
     test_config = Config(sys.argv[1])
-    print(test_config)
+    console_print(test_config)

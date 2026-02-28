@@ -12,13 +12,13 @@ from ipcheck import GEO2CITY_DB_NAME, GEO2ASN_DB_NAME, WorkMode
 from ipcheck.app.config import Config
 from ipcheck.app.geo_utils import get_geo_info
 from ipcheck.app.statemachine import state_machine
-from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address, get_perfcounter, floyd_sample
+from ipcheck.app.utils import is_ip_network, get_net_version, is_valid_port, is_hostname, get_resolve_ips, is_ip_address, get_perfcounter, floyd_sample, console_print
 from ipcheck.app.ip_info import IpInfo
 
 
 def filter_ip_list_by_locs(ip_list: Iterable[IpInfo], prefer_locs: Iterable[str]):
     if not state_machine.geo_loc_avaiable:
-        print('{} 数据库不可用, 跳过地区过滤... ...'.format(GEO2CITY_DB_NAME))
+        console_print('{} 数据库不可用, 跳过地区过滤... ...'.format(GEO2CITY_DB_NAME))
         return ip_list
     fixed_list = []
     for ip_info in ip_list:
@@ -32,7 +32,7 @@ def filter_ip_list_by_locs(ip_list: Iterable[IpInfo], prefer_locs: Iterable[str]
 
 def filter_ip_list_by_orgs(ip_list: Iterable[IpInfo], prefer_orgs: Iterable[str]):
     if not state_machine.geo_asn_org_avaiable:
-        print('{} 数据库不可用, 跳过org 过滤... ...'.format(GEO2ASN_DB_NAME))
+        console_print('{} 数据库不可用, 跳过org 过滤... ...'.format(GEO2ASN_DB_NAME))
         return ip_list
     fixed_list = []
     for ip_info in ip_list:
@@ -46,7 +46,7 @@ def filter_ip_list_by_orgs(ip_list: Iterable[IpInfo], prefer_orgs: Iterable[str]
 
 def filter_ip_list_by_block_orgs(ip_list: Iterable[IpInfo], block_orgs: Iterable[str]):
     if not state_machine.geo_asn_org_avaiable:
-        print('{} 数据库不可用, 跳过org过滤... ...'.format(GEO2ASN_DB_NAME))
+        console_print('{} 数据库不可用, 跳过org过滤... ...'.format(GEO2ASN_DB_NAME))
         return ip_list
     fixed_list = []
     for ip_info in ip_list:
@@ -88,11 +88,11 @@ class IpParser:
                         ip_set.update(result)
         t2 = get_perfcounter()
         if state_machine.work_mode == WorkMode.IP_CHECK:
-            print('解析ip 耗时: {}秒'.format(round(t2 - t1, 2)))
+            console_print('解析ip 耗时: {}秒'.format(round(t2 - t1, 2)))
         ip_set = get_geo_info(ip_set)
         t3 = get_perfcounter()
         if state_machine.work_mode == WorkMode.IP_CHECK:
-            print('获取geo 信息耗时: {}秒'.format(round(t3 - t2, 2)))
+            console_print('获取geo 信息耗时: {}秒'.format(round(t3 - t2, 2)))
         if state_machine.work_mode == WorkMode.IGEO_INFO:
             return ip_set
         if self.config.ro_prefer_orgs:
@@ -104,7 +104,7 @@ class IpParser:
         ip_list = list(ip_set)
         t4 = get_perfcounter()
         if state_machine.work_mode == WorkMode.IP_CHECK:
-            print('预处理ip 总计耗时: {}秒'.format(round(t4 - t1, 2)))
+            console_print('预处理ip 总计耗时: {}秒'.format(round(t4 - t1, 2)))
         return ip_list
 
     def __parse_sources(self):
