@@ -199,7 +199,8 @@ class FreshablePrinter:
         self._queue = queue.Queue(maxsize=maxsize)
         self._thread = None
         self._lock = threading.Lock()
-        self._io_lock = threading.Lock()
+        # 控制台 I/O 可能在同一调用栈内重入（例如 console_print -> stdout.write），使用可重入锁避免死锁。
+        self._io_lock = threading.RLock()
         self._last_cols = 0
         self._line_open = False
         self._raw_stdout = sys.stdout
@@ -265,7 +266,9 @@ class FreshablePrinter:
 
     def _raw_stdout_print(self, *args, **kwargs):
         kwargs.setdefault('file', sys.stdout)
-        return builtins.print(*args, **kwargs)
+        # 原子化整个 print，避免正文和换行被其他线程的 refresh 插入导致行内容错位。
+        with self._io_lock:
+            return builtins.print(*args, **kwargs)
 
 
 freshable_printer = FreshablePrinter(maxsize=1)
