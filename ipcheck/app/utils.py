@@ -204,6 +204,21 @@ class FreshablePrinter:
         self._last_cols = 0
         self._line_open = False
         self._raw_stdout = sys.stdout
+        self._supports_ansi_erase = self._detect_ansi_erase()
+
+    def _detect_ansi_erase(self):
+        try:
+            if not hasattr(self._raw_stdout, 'isatty') or not self._raw_stdout.isatty():
+                return False
+        except Exception:
+            return False
+        if os.name != 'nt':
+            return True
+        # 常见 Windows 终端环境变量: Windows Terminal / ANSICON / ConEmu / xterm-like TERM。
+        term = os.environ.get('TERM', '')
+        if os.environ.get('WT_SESSION') or os.environ.get('ANSICON') or os.environ.get('ConEmuANSI') == 'ON' or 'xterm' in term.lower():
+            return True
+        return False
 
     def _worker(self):
         while True:
@@ -215,13 +230,16 @@ class FreshablePrinter:
                 except queue.Empty:
                     break
             content = str(content)
-            content_cols = _display_width(content)
-            pad_len = max(0, self._last_cols - content_cols)
             # 回到行首重绘，打印后光标停在行尾。
             with self._io_lock:
-                self._raw_stdout.write('\r' + content + (' ' * pad_len))
+                if self._supports_ansi_erase:
+                    self._raw_stdout.write('\r\033[K' + content)
+                else:
+                    content_cols = _display_width(content)
+                    pad_len = max(0, self._last_cols - content_cols)
+                    self._raw_stdout.write('\r' + content + (' ' * pad_len))
+                    self._last_cols = content_cols
                 self._raw_stdout.flush()
-                self._last_cols = content_cols
                 self._line_open = True
 
     def _ensure_started(self):
@@ -292,7 +310,10 @@ class _FreshAwareStdout:
         with self._printer._io_lock:
             # 如有刷新行未结束，普通输出前先擦除该行，避免把进度行固化为历史行。
             if self._printer._line_open and not data.startswith('\r'):
-                self._wrapped.write('\r' + (' ' * self._printer._last_cols) + '\r')
+                if self._printer._supports_ansi_erase:
+                    self._wrapped.write('\r\033[K')
+                else:
+                    self._wrapped.write('\r' + (' ' * self._printer._last_cols) + '\r')
                 self._printer._line_open = False
                 self._printer._last_cols = 0
             written = self._wrapped.write(data)
@@ -309,6 +330,7 @@ class _FreshAwareStdout:
 
 
 freshable_printer.install()
+console_print('当前Terminal ANSI清行支持: {}'.format(freshable_printer._supports_ansi_erase))
 
 def write_file(content: str, path: str):
     with open(path, 'w', encoding='utf-8') as f:
