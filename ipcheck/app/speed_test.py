@@ -14,7 +14,6 @@ from ipcheck import USER_AGENTS
 
 urllib3.disable_warnings()
 
-
 class SpeedTest:
 
     def __init__(self, ip_list: Iterable[IpInfo], config: SpeedTestConfig) -> None:
@@ -66,6 +65,7 @@ class SpeedTest:
         avg_speed = 0
         real_start = 0
         has_error = False
+        trunk_size = 1024 * 256
 
         def download():
             nonlocal download_exit, has_error
@@ -89,7 +89,7 @@ class SpeedTest:
                                  preload_content=False,
                                  retries=urllib3.util.Retry(self.config.max_retry, backoff_factor=self.config.retry_factor, respect_retry_after_header=False)) as r:
                     nonlocal size, real_start
-                    for chunk in r.stream():
+                    for chunk in r.stream(trunk_size):
                         if real_start == 0:
                             real_start = get_perfcounter()
                         size += len(chunk)

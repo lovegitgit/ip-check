@@ -73,7 +73,7 @@ class RttTest:
         return tcpping(ip_info,
                         count=self.config.test_count,
                         interval=self.config.interval,
-                        timeout=self.config.timeout,
+                        timeout=max(self.config.timeout, self.config.max_rtt / 800),
                         max_loss=self.config.max_loss,
                         max_rtt=self.config.max_rtt,
                         fast_check=self.config.fast_check,

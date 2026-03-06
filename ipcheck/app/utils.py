@@ -330,7 +330,6 @@ class _FreshAwareStdout:
 
 
 freshable_printer.install()
-console_print('当前Terminal ANSI清行支持: {}'.format(freshable_printer._supports_ansi_erase))
 
 def write_file(content: str, path: str):
     with open(path, 'w', encoding='utf-8') as f:
