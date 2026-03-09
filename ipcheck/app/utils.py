@@ -17,9 +17,6 @@ import socket
 import asyncio
 import time
 import threading
-import queue
-import builtins
-import unicodedata
 
 
 class UniqueListAction(argparse.Action):
@@ -193,143 +190,26 @@ def singleton(cls):
 
     return cls
 
-@singleton
-class FreshablePrinter:
-    def __init__(self, maxsize: int = 1):
-        self._queue = queue.Queue(maxsize=maxsize)
-        self._thread = None
-        self._lock = threading.Lock()
-        # 控制台 I/O 可能在同一调用栈内重入（例如 console_print -> stdout.write），使用可重入锁避免死锁。
-        self._io_lock = threading.RLock()
-        self._last_cols = 0
-        self._line_open = False
-        self._raw_stdout = sys.stdout
-        self._supports_ansi_erase = self._detect_ansi_erase()
-
-    def _detect_ansi_erase(self):
-        try:
-            if not hasattr(self._raw_stdout, 'isatty') or not self._raw_stdout.isatty():
-                return False
-        except Exception:
-            return False
-        if os.name != 'nt':
-            return True
-        # 常见 Windows 终端环境变量: Windows Terminal / ANSICON / ConEmu / xterm-like TERM。
-        term = os.environ.get('TERM', '')
-        if os.environ.get('WT_SESSION') or os.environ.get('ANSICON') or os.environ.get('ConEmuANSI') == 'ON' or 'xterm' in term.lower():
-            return True
-        return False
-
-    def _worker(self):
-        while True:
-            content = self._queue.get()
-            # 只保留并输出最新的一条，避免高并发下控制台输出积压
-            while True:
-                try:
-                    content = self._queue.get_nowait()
-                except queue.Empty:
-                    break
-            content = str(content)
-            # 回到行首重绘，打印后光标停在行尾。
-            with self._io_lock:
-                if self._supports_ansi_erase:
-                    self._raw_stdout.write('\r\033[K' + content)
-                else:
-                    content_cols = _display_width(content)
-                    pad_len = max(0, self._last_cols - content_cols)
-                    self._raw_stdout.write('\r' + content + (' ' * pad_len))
-                    self._last_cols = content_cols
-                self._raw_stdout.flush()
-                self._line_open = True
-
-    def _ensure_started(self):
-        if self._thread and self._thread.is_alive():
-            return
-        with self._lock:
-            if self._thread and self._thread.is_alive():
-                return
-            self._thread = threading.Thread(target=self._worker, daemon=True)
-            self._thread.start()
-
-    def _ensure_stdout_wrapper(self):
-        if getattr(sys.stdout, '_freshaware_enabled', False):
-            return
-        with self._io_lock:
-            if getattr(sys.stdout, '_freshaware_enabled', False):
-                return
-            self._raw_stdout = sys.stdout
-            sys.stdout = _FreshAwareStdout(sys.stdout, self)
-
-    def install(self):
-        self._ensure_stdout_wrapper()
-
-    def show(self, content: str):
-        self._ensure_stdout_wrapper()
-        self._ensure_started()
-        try:
-            self._queue.put_nowait(content)
-        except queue.Full:
-            try:
-                self._queue.get_nowait()
-            except queue.Empty:
-                pass
-            try:
-                self._queue.put_nowait(content)
-            except queue.Full:
-                pass
-
-    def log(self, *args, **kwargs):
-        self._ensure_stdout_wrapper()
-        return self._raw_stdout_print(*args, **kwargs)
-
-    def _raw_stdout_print(self, *args, **kwargs):
-        kwargs.setdefault('file', sys.stdout)
-        # 原子化整个 print，避免正文和换行被其他线程的 refresh 插入导致行内容错位。
-        with self._io_lock:
-            return builtins.print(*args, **kwargs)
-
-
-freshable_printer = FreshablePrinter(maxsize=1)
+_print_lock = threading.Lock()
+_last_was_refresh = False
 
 def console_refresh(content: str):
-    freshable_printer.show(content)
+    global _last_was_refresh
+    with _print_lock:
+        sys.stdout.write('\r' + content + '\033[K')
+        sys.stdout.flush()
+        _last_was_refresh = True
 
 def console_print(*args, **kwargs):
-    freshable_printer.log(*args, **kwargs)
-
-
-class _FreshAwareStdout:
-    def __init__(self, wrapped, printer):
-        self._wrapped = wrapped
-        self._printer = printer
-        self._freshaware_enabled = True
-
-    def write(self, data):
-        if not data:
-            return 0
-        with self._printer._io_lock:
-            # 如有刷新行未结束，普通输出前先擦除该行，避免把进度行固化为历史行。
-            if self._printer._line_open and not data.startswith('\r'):
-                if self._printer._supports_ansi_erase:
-                    self._wrapped.write('\r\033[K')
-                else:
-                    self._wrapped.write('\r' + (' ' * self._printer._last_cols) + '\r')
-                self._printer._line_open = False
-                self._printer._last_cols = 0
-            written = self._wrapped.write(data)
-            if '\n' in data:
-                self._printer._line_open = False
-                self._printer._last_cols = 0
-            return written
-
-    def flush(self):
-        return self._wrapped.flush()
-
-    def __getattr__(self, item):
-        return getattr(self._wrapped, item)
-
-
-freshable_printer.install()
+    global _last_was_refresh
+    text = ' '.join(str(arg) for arg in args)
+    end = kwargs.get('end', '\n')
+    with _print_lock:
+        if _last_was_refresh:
+            sys.stdout.write('\r' + '\033[K')
+        sys.stdout.write(text + end)
+        sys.stdout.flush()
+        _last_was_refresh = False
 
 def write_file(content: str, path: str):
     with open(path, 'w', encoding='utf-8') as f:
@@ -433,15 +313,3 @@ def get_family_addr(host, port):
     except:
         pass
     return family, sockaddr
-
-
-def _display_width(text: str):
-    width = 0
-    for ch in text:
-        if ch == '\t':
-            width += 4
-            continue
-        if unicodedata.combining(ch):
-            continue
-        width += 2 if unicodedata.east_asian_width(ch) in ('W', 'F') else 1
-    return width

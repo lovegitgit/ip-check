@@ -49,7 +49,7 @@ class SpeedTest:
                                                              test_ip_info.rtt))
             test_ip_info = self.__test(test_ip_info)
             state_machine.cache(test_ip_info)
-            console_print(test_ip_info.get_info())
+            console_print(test_ip_info)
             if test_ip_info.max_speed >= self.config.download_speed and test_ip_info.avg_speed >= self.config.avg_download_speed:
                 passed_ips.append(test_ip_info)
             if self.config.bt_ip_limit > 0 and len(passed_ips) >= self.config.bt_ip_limit:
@@ -65,7 +65,7 @@ class SpeedTest:
         avg_speed = 0
         real_start = 0
         has_error = False
-        trunk_size = 1024 * 256
+        trunk_size = 1024 * 16
 
         def download():
             nonlocal download_exit, has_error
