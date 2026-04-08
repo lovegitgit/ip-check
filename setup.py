@@ -35,12 +35,11 @@ setup(
     },
     python_requires=">=3.8",
     install_requires=[
-        'geoip2',
+        'geoip2>=4.8.1',
         'ipaddress',
-        'requests',
-        'requests[socks]',
+        'requests[socks]>=2.32.0,<3.0.0',
         'tqdm',
-        'urllib3 >= 2.2.3',
+        'urllib3>=1.26.0,<3.0.0',
         'importlib-metadata',
     ],
 )

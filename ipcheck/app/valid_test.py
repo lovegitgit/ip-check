@@ -139,8 +139,14 @@ class ValidTest:
                     if fr.status == 200:
                         cl = fr.headers.get('Content-Length', 0)
                         if not cl or int(cl) <= 0:
+                            if self.config.print_err:
+                                console_print(
+                                    f'valid file_url test for {ip_info.simple_info} got invalid Content-Length: {cl!r} from {self.config.file_url}')
                             res = None
                     else:
+                        if self.config.print_err:
+                            console_print(
+                                f'valid file_url test for {ip_info.simple_info} got status {fr.status} from {self.config.file_url}')
                         res = None
                 file_pool.close()
         except Exception as e:
