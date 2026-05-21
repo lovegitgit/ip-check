@@ -67,11 +67,24 @@ def load_config():
     config.ro_prefer_locs = args.prefer_locs
     if config.ro_prefer_locs:
         console_print('优选地区参数为:', config.ro_prefer_locs)
+    prefer_colo, block_colo = args.prefer_colo, args.block_colo
+    if prefer_colo and block_colo:
+        # console_print('偏好colo参数与屏蔽colo参数同时存在, 自动忽略屏蔽colo参数!')
+        block_colo = None
+    if prefer_colo:
+        config.vt_prefer_colo = [p.upper() for p in prefer_colo]
+        config.vt_block_colo = None
+    if block_colo:
+        config.vt_block_colo = [b.upper() for b in block_colo]
+        config.vt_prefer_colo = None
+    if config.vt_prefer_colo:
+        console_print('可用性测试优选colo 参数为:', config.vt_prefer_colo)
+    if config.vt_block_colo:
+        console_print('可用性测试屏蔽colo 参数为:', config.vt_block_colo)
     prefer_orgs, block_orgs = args.prefer_orgs, args.block_orgs
     if prefer_orgs and block_orgs:
         console_print('偏好org参数与屏蔽org参数同时存在, 自动忽略屏蔽org参数!')
         block_orgs = None
-    config.ro_prefer_orgs = args.prefer_orgs
     if prefer_orgs:
         console_print('优选org 参数为:', prefer_orgs)
         config.ro_prefer_orgs = prefer_orgs

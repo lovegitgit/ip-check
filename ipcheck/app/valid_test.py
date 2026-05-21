@@ -21,6 +21,15 @@ class ValidTest:
         self.ip_list = ip_list
         self.config = config
 
+    def _check_colo_valid(self, colo) -> bool:
+        if not colo:
+            return not self.config.prefer_colo
+        if self.config.prefer_colo:
+            return any(colo.startswith(p) for p in self.config.prefer_colo)
+        elif self.config.block_colo:
+            return not any(colo.startswith(b) for b in self.config.block_colo)
+        return True
+
     def run(self) -> Iterable[IpInfo]:
         if not self.config.enabled:
             console_print('跳过可用性测试')
@@ -105,7 +114,8 @@ class ValidTest:
                         colo = req_dict.get('colo', None)
                         ip_info.loc = loc
                         ip_info.colo = colo
-                        res = ip_info
+                        if self._check_colo_valid(colo):
+                            res = ip_info
                 elif r.status == 200:
                     res = ip_info
             pool.close()

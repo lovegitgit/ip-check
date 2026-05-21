@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import ast
 import configparser
 import sys
 
@@ -85,6 +86,10 @@ class Config(CommonConfig):
         self.vt_timeout = 1.5
         # 可用性测试检测的key
         self.vt_check_key = 'h'
+        # 偏好colo
+        self.vt_prefer_colo = []
+        # 屏蔽colo
+        self.vt_block_colo = []
         # 是否打印错误信息
         self.vt_print_err = False
 
@@ -156,11 +161,20 @@ class Config(CommonConfig):
                 if not self.check_key_valid(key):
                     continue
                 original_value = variables.get(key)
+                if isinstance(original_value, list):
+                    try:
+                        parsed_list = ast.literal_eval(value)
+                        if not isinstance(parsed_list, list):
+                            parsed_list = [parsed_list]
+                    except (ValueError, SyntaxError):
+                        continue
+                    if key in ('vt_prefer_colo', 'vt_block_colo'):
+                        parsed_list = [item.upper() for item in parsed_list]
+                    setattr(self, key, parsed_list)
+                    continue
                 type_expr = None
-                if original_value or original_value == '':
-                    type_of_original_value = type(original_value)
-                    if type_of_original_value == str:
-                        type_expr = 'str'
+                if isinstance(original_value, str):
+                    type_expr = 'str'
                 if type_expr:
                     expr = "self.{} = '{}'".format(key, value)
                 else:

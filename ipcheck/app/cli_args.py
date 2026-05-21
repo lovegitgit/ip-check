@@ -37,6 +37,8 @@ def build_parser(work_mode):
     if work_mode == WorkMode.IP_CHECK:
         parser = argparse.ArgumentParser(description=WORKMODE_META[work_mode]["desc"])
         _add_common_filter_args(parser)
+        parser.add_argument("-pc", "--prefer_colo", action=UniqueListAction, type=str, nargs='+', default=None, help='偏好colo选择, 格式为: expr1 expr2, 如HKG SJC 会筛选colo为HKG或SJC的ip')
+        parser.add_argument("-bc", "--block_colo", action=UniqueListAction, type=str, nargs='+', default=None, help='屏蔽colo选择, 格式为: expr1 expr2, 如HKG SJC 会过滤colo为HKG或SJC的ip')
         parser.add_argument("-pp", "--prefer_ports", action=UniqueListAction, type=int, default=None, nargs='+', help='针对ip:port 格式的测试源筛选端口, 格式为: expr1 expr2, 如443 8443 会筛选出443 和8443 端口的ip')
         parser.add_argument("-lv", "--max_vt_ip_count", type=int, default=0, help="最大用来检测有效(valid) ip数量限制")
         parser.add_argument("-lr", "--max_rt_ip_count", type=int, default=0, help="最大用来检测rtt ip数量限制")

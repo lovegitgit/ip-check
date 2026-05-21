@@ -10,6 +10,6 @@ class ValidTestConfig(BaseConfig):
     def get_config_prefix(self) -> str:
         return CONFIG_PREFIX
 
-    # 由于引入了新的参数方法, 已经无用
     # def gen_cf_extra_part(self, config):
-    #     self.ip_port = config.ip_port
+    #     self.prefer_colo = config.ro_prefer_colo
+    #     self.block_colo = config.ro_block_colo
