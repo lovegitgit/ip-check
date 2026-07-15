@@ -25,7 +25,8 @@ note: 下载mmdb 数据库可能会失败，可以手动下载mmdb 数据库到`
 ```shell
 ip-check -h
 usage: ip-check [-h] [-w WHITE_LIST [WHITE_LIST ...]] [-b BLOCK_LIST [BLOCK_LIST ...]] [-pl PREFER_LOCS [PREFER_LOCS ...]]
-                [-po PREFER_ORGS [PREFER_ORGS ...]] [-bo BLOCK_ORGS [BLOCK_ORGS ...]] [-pp PREFER_PORTS [PREFER_PORTS ...]] [-lv MAX_VT_IP_COUNT]
+                [-po PREFER_ORGS [PREFER_ORGS ...]] [-bo BLOCK_ORGS [BLOCK_ORGS ...]] [-pc PREFER_COLO [PREFER_COLO ...]]
+                [-bc BLOCK_COLO [BLOCK_COLO ...]] [-pp PREFER_PORTS [PREFER_PORTS ...]] [-lv MAX_VT_IP_COUNT]
                 [-lr MAX_RT_IP_COUNT] [-ls MAX_ST_IP_COUNT] [-lb MAX_BT_IP_COUNT] [-p PORT] [-H HOST] [-dr] [-dv] [-ds] [-o OUTPUT] [-f] [-s SPEED]
                 [-as AVG_SPEED] [-r RTT] [-l LOSS] [-c CONFIG] [-u URL] [-v] [-ns] [--dry_run] [-4] [-6] [-cs CR_SIZE] [-df] [--pure_mode]
                 [--version] source [source ...]
@@ -47,6 +48,10 @@ optional arguments:
                         偏好org 选择, 格式为: expr1 expr2, 如org1 org2 会筛选org1, org2 的服务商ip
   -bo BLOCK_ORGS [BLOCK_ORGS ...], --block_orgs BLOCK_ORGS [BLOCK_ORGS ...]
                         屏蔽org 选择, 格式为: expr1 expr2, 如org1 org2 会过滤org1, org2 的服务商ip
+  -pc PREFER_COLO [PREFER_COLO ...], --prefer_colo PREFER_COLO [PREFER_COLO ...]
+                        偏好colo选择, 格式为: expr1 expr2, 如HKG SJC 会筛选colo为HKG或SJC的ip
+  -bc BLOCK_COLO [BLOCK_COLO ...], --block_colo BLOCK_COLO [BLOCK_COLO ...]
+                        屏蔽colo选择, 格式为: expr1 expr2, 如HKG SJC 会过滤colo为HKG或SJC的ip
   -pp PREFER_PORTS [PREFER_PORTS ...], --prefer_ports PREFER_PORTS [PREFER_PORTS ...]
                         针对ip:port 格式的测试源筛选端口, 格式为: expr1 expr2, 如443 8443 会筛选出443 和8443 端口的ip
   -lv MAX_VT_IP_COUNT, --max_vt_ip_count MAX_VT_IP_COUNT
@@ -117,6 +122,10 @@ ip-check test.txt -b "13" "14"
 ip-check test.txt -b "131.13" "131.14"
 # 按地区筛选ip
 ip-check test.txt -pl "japan" "hongkong"
+# 按COLO筛选ip
+ip-check test.txt -pc "HKG" "SJC"
+# 按COLO屏蔽ip
+ip-check test.txt -bc "HKG" "SJC"
 # ip:port 格式的测试源只测试端口为8443 的测试源
 ip-check 7.8.9.10:443 7.8.9.10:8443 -pp 8443
 
@@ -134,7 +143,7 @@ ip-check test.txt -lr 100
 # 限制参与下载速度测试的ip 的数量
 ip-check test.txt -ls 100
 
-# 快速测试， 开启此选项后，当到达测试时长一半下载时间后，最高网速仍未达到期网网速的一半则退出此ip 下载测速
+# 快速测试（抑制减速/限速 CDN），开启此选项后，当到达测试时间的一半后，若最高网速仍未达到期望网速的一半，或者平均网速未达到期望平均网速的77%，则自动中断退出此ip的下载测速，避免在慢速/限速 CDN 节点上浪费时间。
 ip-check test.txt -f
 
 # 指定期网网速，单位 kB/s
